@@ -1,0 +1,21 @@
+<!-- res/layout/token_spinner_item.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/imageToken"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/token1_logo" />
+
+    <TextView
+        android:id="@+id/textToken"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Token Name" />
+</LinearLayout>

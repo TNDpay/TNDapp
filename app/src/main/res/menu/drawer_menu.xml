@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_connect_wallet"
+        android:title="Connect Wallet"
+        android:icon="@drawable/connected" />
+    <item
+        android:id="@+id/nav_disconnect_wallet"
+        android:title="Disconnect Wallet"
+        android:icon="@drawable/disconnect" />
+    <item
+        android:id="@+id/nav_pay_hist"
+        android:title="Payment History"
+        android:icon="@drawable/pay_history" />
+    <item
+        android:id="@+id/nav_config"
+        android:title="Configuration"
+        android:icon="@drawable/config" />
+    <item
+        android:id="@+id/nav_divider"
+        android:title=""
+        android:enabled="false"/>
+    <item
+        android:id="@+id/nav_twitter"
+        android:title="Twitter"
+        android:icon="@drawable/xmini"
+        />
+    <item
+        android:id="@+id/nav_telegram"
+        android:title="Telegram"
+        android:icon="@drawable/telegram" />
+    <item
+        android:id="@+id/nav_website"
+        android:title="Website"
+        android:icon="@drawable/internet" />
+
+    <item
+        android:id="@+id/nav_divider2"
+        android:title=""
+        android:enabled="false"/>
+
+    <item
+        android:id="@+id/nav_explore_form"
+        android:title="Get in the Explore"
+        android:icon="@drawable/globe" />
+</menu>

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">TND</string>
+    <string name="id_url" translatable="false">https://tnd.com</string>
+    <string name="id_favicon" translatable="false">favicon.ico</string>
+    <string name="servicedesc">NFC Tag Emulation Service</string>
+    <string name="aiddescription">AID Group Description</string>
+    <string name="token_image">Token image</string>
+    <string name="payment_request_format">Payment request:\nAddress: %1$s\nAmount: %2$.2f\nToken: %3$s</string>
+    <string name="error_invalid_payment_info">Invalid payment information received.</string>
+    <string name="title_activity_explore">ExploreActivity</string>
+
+</resources>

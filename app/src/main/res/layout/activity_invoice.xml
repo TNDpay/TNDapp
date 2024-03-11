@@ -1,0 +1,99 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".InvoiceActivity">
+
+    <TextView
+        android:id="@+id/labelTo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="To:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/labelAmount"/>
+
+    <Button
+        android:id="@+id/buttonMyAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="My Address"
+        app:layout_constraintStart_toEndOf="@+id/editTextAddress"
+        app:layout_constraintTop_toTopOf="@+id/editTextAddress"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextAddress" />
+
+    <EditText
+        android:id="@+id/editTextAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Enter Address"
+        android:maxWidth="300dp"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/labelTo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/editTextAmount" />
+
+    <TextView
+        android:id="@+id/labelAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Amount:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextAddress"/>
+
+    <EditText
+        android:id="@+id/editTextAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Enter Amount"
+        android:maxWidth="300dp"
+        android:textSize="20sp"
+        android:inputType="numberDecimal"
+        app:layout_constraintStart_toEndOf="@+id/labelAmount"
+        app:layout_constraintTop_toBottomOf="@+id/editTextAddress" />
+
+    <TextView
+        android:id="@+id/textViewDollarAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0.00"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/editTextAmount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextAmount"
+        app:layout_constraintTop_toTopOf="@+id/editTextAmount" />
+    <TextView
+        android:id="@+id/labelReceive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Receive:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editTextAmount"
+        app:layout_constraintBottom_toTopOf="@id/spinnerToken" />
+
+    <Spinner
+        android:id="@+id/spinnerToken"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelReceive"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="REQUEST"
+        app:layout_constraintTop_toBottomOf="@id/spinnerToken"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
