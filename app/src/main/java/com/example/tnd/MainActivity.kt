@@ -515,6 +515,8 @@
             customTabsIntent.launchUrl(this, Uri.parse(url))
         }
 
+
+
         private fun hasValidAuthToken(): Boolean {
             // Retrieve the saved auth token from SharedPreferences or similar storage
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
