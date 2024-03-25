@@ -103,4 +103,7 @@ dependencies {
     //MAP
     implementation("com.google.android.gms:play-services-location:21.2.0")
 
+    //EVM (Metamask)
+    implementation("io.metamask.androidsdk:metamask-android-sdk:0.2.1")
+
 }

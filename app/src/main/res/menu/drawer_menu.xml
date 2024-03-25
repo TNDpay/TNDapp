@@ -41,6 +41,6 @@
 
     <item
         android:id="@+id/nav_explore_form"
-        android:title="Get in the Explore"
+        android:title="TND in your bussines "
         android:icon="@drawable/globe" />
 </menu>

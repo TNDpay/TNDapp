@@ -51,7 +51,7 @@
     import okhttp3.Request
     import com.google.gson.Gson
     import com.google.gson.JsonObject
-
+    import io.metamask.androidsdk.Ethereum
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
