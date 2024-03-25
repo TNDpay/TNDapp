@@ -51,8 +51,6 @@
     import okhttp3.Request
     import com.google.gson.Gson
     import com.google.gson.JsonObject
-    import androidx.constraintlayout.widget.ConstraintLayout
-
 
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
@@ -74,6 +72,8 @@
         private lateinit var identityName: String
         private lateinit var authToken: String
         private lateinit var drawerLayout: DrawerLayout
+        private lateinit var addressTextView: TextView
+        private lateinit var cardLayout: View
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,12 +94,16 @@
             PayButton.visibility = View.GONE
             declineButton.visibility = View.GONE
             spinnerToken.visibility = View.GONE
+            addressTextView = findViewById(R.id.addressTextView)
+            cardLayout = findViewById(R.id.cardLayout)
 
 
             if (hasValidAuthToken()) {
                 connectWalletButton.visibility = View.GONE
+                cardLayout.visibility = View.VISIBLE
             } else {
                 connectWalletButton.visibility = View.VISIBLE
+                cardLayout.visibility = View.GONE
             }
             val (retrievedAuthToken, retrievedUserAddress) = retrieveAuthData()
             if (retrievedAuthToken != null && retrievedUserAddress != null) {
@@ -574,6 +578,7 @@
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
                                 updateUserAddressUI(userAddress)
+                                cardLayout.visibility = View.VISIBLE
                             }
                             val navigationView: NavigationView = findViewById(R.id.nav_view)
                             updateMenuItemsVisibility(navigationView)
@@ -629,13 +634,13 @@
             noWallet = true
             canTransact = false
             runOnUiThread {
-                // Hide the Pay button
                 PayButton.visibility = View.GONE
                 declineButton.visibility = View.GONE
                 spinnerToken.visibility = View.GONE
                 findViewById<TextView>(R.id.textViewTokenName).text = ""
                 findViewById<TextView>(R.id.userAddressTextView).text = ""
                 connectWalletButton.visibility = View.VISIBLE
+                cardLayout.visibility = View.GONE
 
             }
             updateButton()

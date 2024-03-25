@@ -7,56 +7,79 @@
     android:padding="16dp"
     tools:context=".InvoiceActivity">
 
-    <TextView
-        android:id="@+id/labelTo"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineCenter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="To:"
-        android:textSize="20sp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.15" />
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CREATE INVOICE"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/titleIconImageView"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="@id/guidelineCenter"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/titleIconImageView"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_invoice"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/titleTextView"
+        app:layout_constraintStart_toEndOf="@id/titleTextView"
+        app:layout_constraintTop_toTopOf="@id/titleTextView" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/recipientInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/labelAmount"/>
+        app:layout_constraintEnd_toStartOf="@id/buttonMyAddress"
+        app:layout_constraintTop_toBottomOf="@id/titleTextView">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Recipient Address" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/buttonMyAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="My Address"
-        app:layout_constraintStart_toEndOf="@+id/editTextAddress"
-        app:layout_constraintTop_toTopOf="@+id/editTextAddress"
-        app:layout_constraintBottom_toBottomOf="@+id/editTextAddress" />
-
-    <EditText
-        android:id="@+id/editTextAddress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Enter Address"
-        android:maxWidth="300dp"
-        android:textSize="20sp"
-        app:layout_constraintStart_toEndOf="@+id/labelTo"
+        android:layout_marginStart="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/editTextAmount" />
+        app:layout_constraintTop_toTopOf="@id/recipientInputLayout"
+        app:layout_constraintBottom_toBottomOf="@id/recipientInputLayout" />
 
-    <TextView
-        android:id="@+id/labelAmount"
-        android:layout_width="wrap_content"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/amountInputLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Amount:"
-        android:textSize="20sp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextAddress"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recipientInputLayout">
 
-    <EditText
-        android:id="@+id/editTextAmount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Enter Amount"
-        android:maxWidth="300dp"
-        android:textSize="20sp"
-        android:inputType="numberDecimal"
-        app:layout_constraintStart_toEndOf="@+id/labelAmount"
-        app:layout_constraintTop_toBottomOf="@+id/editTextAddress" />
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Amount"
+            android:inputType="numberDecimal" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/textViewDollarAmount"
@@ -64,36 +87,40 @@
         android:layout_height="wrap_content"
         android:text="$0.00"
         android:textSize="20sp"
-        app:layout_constraintStart_toEndOf="@+id/editTextAmount"
+        android:layout_marginStart="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/editTextAmount"
-        app:layout_constraintTop_toTopOf="@+id/editTextAmount" />
+        app:layout_constraintTop_toTopOf="@id/amountInputLayout"
+        app:layout_constraintBottom_toBottomOf="@id/amountInputLayout" />
+
     <TextView
         android:id="@+id/labelReceive"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Receive:"
         android:textSize="20sp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextAmount"
-        app:layout_constraintBottom_toTopOf="@id/spinnerToken" />
+        app:layout_constraintTop_toBottomOf="@id/amountInputLayout" />
 
     <Spinner
         android:id="@+id/spinnerToken"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/labelReceive"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelReceive" />
 
     <Button
         android:id="@+id/buttonSend"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="REQUEST"
-        app:layout_constraintTop_toBottomOf="@id/spinnerToken"
+        android:layout_marginTop="16dp"
+        android:text="SEND REQUEST"
+        android:textColor="@android:color/white"
+        android:background="@drawable/card_background"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/spinnerToken" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
