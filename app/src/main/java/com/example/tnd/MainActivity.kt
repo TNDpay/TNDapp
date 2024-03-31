@@ -52,6 +52,8 @@
     import com.google.gson.Gson
     import com.google.gson.JsonObject
     import io.metamask.androidsdk.Ethereum
+    import io.metamask.androidsdk.Dapp
+    import io.metamask.androidsdk.RequestError
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -551,6 +553,20 @@
 
 
         private fun connectWallet() {
+            // Create an AlertDialog to prompt the user to choose the wallet type
+            val walletOptions = arrayOf("Solana Wallet", "MetaMask")
+            AlertDialog.Builder(this)
+                .setTitle("Select Wallet Type")
+                .setItems(walletOptions) { _, which ->
+                    when (which) {
+                        0 -> connectSolanaWallet()
+                        1 -> connectMetaMask()
+                    }
+                }
+                .show()
+        }
+
+        private fun connectSolanaWallet() {
             scope.launch {
                 try {
                     val walletAdapterClient = MobileWalletAdapter()
@@ -558,12 +574,11 @@
                         authorize(
                             identityUri = identityUri,
                             iconUri = iconUri,
-                            identityName = identityName,
-                            //rpcCluster = RpcCluster.Devnet
+                            identityName = identityName
                         )
                     }
 
-                    // Handle the result of wallet connection attempt
+                    // Handle the result of Solana wallet connection attempt
                     when (result) {
                         is TransactionResult.Success -> {
                             // Save the values from the successful result
@@ -573,7 +588,7 @@
                             // After successful wallet connection
                             storeAuthData(authToken, userAddress)
                             // Log the result and update UI on the main thread
-                            Log.d("MainActivity", "Connected: $userAddress")
+                            Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
@@ -609,7 +624,7 @@
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "Error connecting wallet: ${e.message}")
+                    Log.e("MainActivity", "Error connecting to Solana Wallet: ${e.message}")
                     // Handle exceptions
                     runOnUiThread {
                         // Update the UI to show an error message
@@ -618,6 +633,34 @@
             }
         }
 
+        private fun connectMetaMask() {
+            val ethereum = Ethereum(context = this)
+
+            val dapp = Dapp("TND Pay", "https://www.tndpayments.com/")
+
+            // This is the same as calling eth_requestAccounts
+            ethereum.connect(dapp) { result ->
+                if (result is RequestError) {
+                    Log.e("MainActivity", "MetaMask connection error: ${result.message}")
+                    runOnUiThread {
+                        // Update the UI to show an error message
+                    }
+                } else {
+                    Log.d("MainActivity", "MetaMask connection result: $result")
+                    // Parse the result to get the user's Ethereum address
+                    val ethereumAddress = result.toString()
+                    // Update the UI to reflect the connected state
+                    runOnUiThread {
+                        connectWalletButton.visibility = View.GONE
+                        updateButton() // Update the connect button text
+                        updateUserAddressUI(ethereumAddress)
+                        cardLayout.visibility = View.VISIBLE
+                    }
+                    val navigationView: NavigationView = findViewById(R.id.nav_view)
+                    updateMenuItemsVisibility(navigationView)
+                }
+            }
+        }
         private fun disconnectWallet() {
             // Clear the stored auth token and user address
 
