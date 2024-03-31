@@ -10,6 +10,10 @@ object TokenData {
         TokenItem(6, "JUP", R.drawable.jup, 6, "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN")
     )
 
+    val tokenList_eth = listOf(
+        TokenItem(1, "USDC", R.drawable.token2_logo, 18, "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+    )
+
     data class TokenItem(
         val id: Int,
         val name: String,

@@ -54,6 +54,7 @@
     import io.metamask.androidsdk.Ethereum
     import io.metamask.androidsdk.Dapp
     import io.metamask.androidsdk.RequestError
+    import android.widget.LinearLayout
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -76,6 +77,7 @@
         private lateinit var drawerLayout: DrawerLayout
         private lateinit var addressTextView: TextView
         private lateinit var cardLayout: View
+        private var connectedNetwork: String = ""
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,8 +146,6 @@
 
                             if (canTransact) {
                                 Log.e("MainActivity", "Calling payment function")
-                                //Log.d("MainActivity", "IDsPINNER =$idSpinner")
-                                //Log.d("MainActivity", "IDsPINNER =$id")
                                 if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
                                     if (id == 1) {
                                         Log.d("MainActivity", "SOL PAY ")
@@ -237,7 +237,11 @@
             declineButton.setOnClickListener {
                 decline()
             }
-            val tokenAdapter = TokenAdapter(this, TokenData.tokenList)
+            val tokenAdapter = if (connectedNetwork == "solana") {
+                TokenAdapter(this, TokenData.tokenList)
+            } else {
+                TokenAdapter(this, TokenData.tokenList_eth)
+            }
             spinnerToken.adapter = tokenAdapter
 
 
@@ -589,6 +593,8 @@
                             storeAuthData(authToken, userAddress)
                             // Log the result and update UI on the main thread
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
+                            connectedNetwork = "solana"
+                            updateCardUI()
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
@@ -649,6 +655,8 @@
                     Log.d("MainActivity", "MetaMask connection result: $result")
                     // Parse the result to get the user's Ethereum address
                     val ethereumAddress = result.toString()
+                    connectedNetwork = "metamask"
+                    updateCardUI()
                     // Update the UI to reflect the connected state
                     runOnUiThread {
                         connectWalletButton.visibility = View.GONE
@@ -661,8 +669,28 @@
                 }
             }
         }
+        private fun updateCardUI() {
+            val cardLayout = findViewById<View>(R.id.cardLayout)
+            val cardBackground = cardLayout.findViewById<LinearLayout>(R.id.card_background)
+            val chainLogoImageView = cardLayout.findViewById<ImageView>(R.id.chainLogoImageView)
+            val metamaskImageView = cardLayout.findViewById<ImageView>(R.id.metamaskImageView)
+
+            when (connectedNetwork) {
+                "solana" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_background)
+                    chainLogoImageView.setImageResource(R.drawable.token1_logo)
+                    metamaskImageView.visibility = View.GONE
+
+                }
+                "metamask" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_background_metamask)
+                    chainLogoImageView.setImageResource(R.drawable.eth)
+                    metamaskImageView.visibility = View.VISIBLE
+
+                }
+            }
+        }
         private fun disconnectWallet() {
-            // Clear the stored auth token and user address
 
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
             with(sharedPreferences.edit()) {

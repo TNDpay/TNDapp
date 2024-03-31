@@ -10,18 +10,35 @@
     app:cardCornerRadius="16dp">
 
     <LinearLayout
+        android:id="@+id/card_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp"
         android:background="@drawable/card_background">
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/emv_chip"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="52dp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="52dp">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/emv_chip"
+                android:scaleType="centerCrop"
+                android:layout_alignParentStart="true" />
+
+            <ImageView
+                android:id="@+id/metamaskImageView"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/metamask"
+                android:scaleType="centerCrop"
+                android:layout_alignParentEnd="true"
+                android:visibility="gone" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,7 +63,6 @@
 
         </LinearLayout>
 
-        <!-- Resto del código se mantiene igual -->
 
     </LinearLayout>
 
