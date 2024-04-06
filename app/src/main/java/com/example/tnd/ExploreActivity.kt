@@ -73,7 +73,7 @@ class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://raw.githubusercontent.com/DerLomo/TNDetal/main/vendors.json")
+                    .url("https://raw.githubusercontent.com/TNDpay/vendors/main/vendors.json")
                     .build()
 
                 val response = client.newCall(request).execute()

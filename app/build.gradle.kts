@@ -105,5 +105,10 @@ dependencies {
 
     //EVM (Metamask)
     implementation("io.metamask.androidsdk:metamask-android-sdk:0.2.1")
-
+    implementation("org.web3j:core:4.8.7") {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
+    }
+    implementation("org.web3j:crypto:4.8.7"){
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
+    }
 }

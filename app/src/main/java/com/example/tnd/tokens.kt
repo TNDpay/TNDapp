@@ -11,7 +11,11 @@ object TokenData {
     )
 
     val tokenList_eth = listOf(
-        TokenItem(1, "USDC", R.drawable.token2_logo, 18, "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+        TokenItem(1, "USDC", R.drawable.token2_logo, 6, "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+    )
+
+    val tokenList_polygon = listOf(
+        TokenItem(1, "USDC", R.drawable.token2_logo, 6, "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359")
     )
 
     data class TokenItem(

@@ -47,6 +47,7 @@
     import androidx.browser.customtabs.CustomTabColorSchemeParams
     import android.widget.Toast
     import android.app.AlertDialog
+    import android.icu.math.BigDecimal
     import okhttp3.OkHttpClient
     import okhttp3.Request
     import com.google.gson.Gson
@@ -55,6 +56,21 @@
     import io.metamask.androidsdk.Dapp
     import io.metamask.androidsdk.RequestError
     import android.widget.LinearLayout
+    import io.metamask.androidsdk.*
+    import org.web3j.utils.Numeric
+    import java.math.BigInteger
+    import org.web3j.protocol.Web3j
+    import org.web3j.protocol.http.HttpService
+    import org.web3j.tx.Contract
+    import org.web3j.abi.datatypes.Function
+    import org.web3j.abi.FunctionEncoder
+    import org.web3j.abi.FunctionReturnDecoder
+    import org.web3j.abi.TypeReference
+    import org.web3j.abi.datatypes.Address
+    import org.web3j.abi.datatypes.Uint
+    import org.web3j.abi.datatypes.generated.Uint256
+    import org.web3j.abi.datatypes.generated.Uint8
+    import org.web3j.protocol.core.DefaultBlockParameterName
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -78,6 +94,8 @@
         private lateinit var addressTextView: TextView
         private lateinit var cardLayout: View
         private var connectedNetwork: String = ""
+        private lateinit var ethereum: Ethereum
+
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,55 +154,72 @@
             exploreBoutton.setOnClickListener {
                 val intent = Intent(this@MainActivity, ExploreActivity::class.java)
                 startActivity(intent)
-            }
-            PayButton.setOnClickListener {
-                paymentAddress?.let { address ->
-                    paymentAmount?.let { amount ->
-                        tokenId?.let { id ->
-                            val selectedToken = spinnerToken.selectedItem as? TokenData.TokenItem
-                            val idSpinner = selectedToken?.id ?: 1
+                }
+                PayButton.setOnClickListener {
+                    paymentAddress?.let { address ->
+                        paymentAmount?.let { amount ->
+                            tokenId?.let { id ->
+                                val selectedToken = spinnerToken.selectedItem as? TokenData.TokenItem
+                                val idSpinner = selectedToken?.id ?: 1
+                                when (connectedNetwork) {
+                                    "solana" -> {
 
-                            if (canTransact) {
-                                Log.e("MainActivity", "Calling payment function")
-                                if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
-                                    if (id == 1) {
-                                        Log.d("MainActivity", "SOL PAY ")
-                                        sendSol(address, amount, userAddress)
-                                    } else {
-                                        Log.d("MainActivity", "SPL PAY ")
-                                        // Handle the case where idSpinner matches id but is not 1
-                                        buildSendSPLTransaction(address, amount, userAddress, id)
-                                    }
-                                } else {
-                                    Log.d("MainActivity", "DIFFERENT ID S ")
-                                    // If user have chosen other token we have to swap
-                                    // Find the selected token to get the number of decimals and mint address
-                                    val tokenIn = TokenData.tokenList.find { it.id == idSpinner }
-                                    val tokenOut = TokenData.tokenList.find { it.id == id }
-                                    // Perform the conversion only if both tokens are found
-                                    if (tokenIn != null && tokenOut != null) {
-                                        // Convert the amount from Double to Long based on the token's decimals
-                                        val amountLong = (amount * Math.pow(10.0, tokenOut.decimals.toDouble())).toLong()
-                                        if (tokenOut.id==1){
-                                            //Jupiter api doesn't provide a swap function for sol output
-                                            //We perform the swap on sender account and then transact swapped SOL
-                                            //TO DO
-                                        }else {
-                                            performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
+                                        if (canTransact) {
+                                            Log.e("MainActivity", "Calling payment function")
+                                            if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
+                                                if (id == 1) {
+                                                    Log.d("MainActivity", "SOL PAY ")
+                                                    sendSol(address, amount, userAddress)
+                                                } else {
+                                                    Log.d("MainActivity", "SPL PAY ")
+                                                    // Handle the case where idSpinner matches id but is not 1
+                                                    buildSendSPLTransaction(address, amount, userAddress, id)
+                                                }
+                                            } else {
+                                                Log.d("MainActivity", "DIFFERENT ID S ")
+                                                // If user have chosen other token we have to swap
+                                                // Find the selected token to get the number of decimals and mint address
+                                                val tokenIn = TokenData.tokenList.find { it.id == idSpinner }
+                                                val tokenOut = TokenData.tokenList.find { it.id == id }
+                                                // Perform the conversion only if both tokens are found
+                                                if (tokenIn != null && tokenOut != null) {
+                                                    // Convert the amount from Double to Long based on the token's decimals
+                                                    val amountLong = (amount * Math.pow(10.0, tokenOut.decimals.toDouble())).toLong()
+                                                    if (tokenOut.id==1){
+                                                        //Jupiter api doesn't provide a swap function for sol output
+                                                        //We perform the swap on sender account and then transact swapped SOL
+                                                        //TO DO
+                                                    }else {
+                                                        performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
+                                                    }
+                                                } else {
+                                                    Log.e("MainActivity", "One of the tokens could not be found.")
+                                                }
+                                            }
+                                        } else {
+                                            Log.e("MainActivity", "Cannot make payment: No user address or can't transact.")
                                         }
-                                    } else {
-                                        Log.e("MainActivity", "One of the tokens could not be found.")
+                                    }
+                                    "Polygon" -> {
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            try {
+                                                payWMM(amount, address)
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    }
+
+                                    else -> {
+                                        Log.e("MainActivity", "ERROR")
                                     }
                                 }
-                            } else {
-                                Log.e("MainActivity", "Cannot make payment: No user address or can't transact.")
+                            } ?: run {
+                                Log.e("MainActivity", "Token ID is null.")
                             }
-                        } ?: run {
-                            Log.e("MainActivity", "Token ID is null.")
                         }
                     }
                 }
-            }
 
 
             val configButton: Button = findViewById(R.id.configButton)
@@ -558,15 +593,26 @@
 
         private fun connectWallet() {
             // Create an AlertDialog to prompt the user to choose the wallet type
-            val walletOptions = arrayOf("Solana Wallet", "MetaMask")
+            val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
             AlertDialog.Builder(this)
                 .setTitle("Select Wallet Type")
                 .setItems(walletOptions) { _, which ->
                     when (which) {
                         0 -> connectSolanaWallet()
-                        1 -> connectMetaMask()
+                        1 -> showMetaMaskWarningDialog()
                     }
                 }
+                .show()
+        }
+
+        private fun showMetaMaskWarningDialog() {
+            AlertDialog.Builder(this)
+                .setTitle("MetaMask Warning")
+                .setMessage("Please note that the MetaMask integration is currently in beta. Make sure you are connected to the Polygon network in MetaMask. Bridge payments can cost up to \$2.")
+                .setPositiveButton("Proceed") { _, _ ->
+                    connectMetaMask()
+                }
+                .setNegativeButton("Cancel", null)
                 .show()
         }
 
@@ -640,7 +686,7 @@
         }
 
         private fun connectMetaMask() {
-            val ethereum = Ethereum(context = this)
+            ethereum = Ethereum(context = this)
 
             val dapp = Dapp("TND Pay", "https://www.tndpayments.com/")
 
@@ -655,19 +701,129 @@
                     Log.d("MainActivity", "MetaMask connection result: $result")
                     // Parse the result to get the user's Ethereum address
                     val ethereumAddress = result.toString()
-                    connectedNetwork = "metamask"
+
+
+                    connectedNetwork = "Polygon"
                     updateCardUI()
+
                     // Update the UI to reflect the connected state
                     runOnUiThread {
                         connectWalletButton.visibility = View.GONE
-                        updateButton() // Update the connect button text
+                        updateButton()
                         updateUserAddressUI(ethereumAddress)
                         cardLayout.visibility = View.VISIBLE
                     }
-                    val navigationView: NavigationView = findViewById(R.id.nav_view)
-                    updateMenuItemsVisibility(navigationView)
                 }
             }
+        }
+        private suspend fun getBridgingCost():String {
+            return withContext(Dispatchers.IO) {
+                // Connect to an Ethereum node (like Infura)
+                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/cc859810620e4bcb9ea9bacb56efc31f"))
+                val destinationChainId = "4"
+                val messenger = "1"
+                val token = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+                // Smart contract address
+                val contractAddress = "0x7775d63836987f444E2F14AA0fA2602204D7D3E0"
+
+                // Load the smart contract
+                val function = Function(
+                    "getBridgingCostInTokens",
+                    listOf(Uint256(BigInteger(destinationChainId, 16)), Uint8(messenger.toBigInteger()), Address(token)),
+                    listOf(object : TypeReference<Uint256>() {})
+                )
+                val encodedFunction = FunctionEncoder.encode(function)
+                // Call the smart contract function
+                val ethCall = web3.ethCall(
+                    org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(
+                        null,
+                        contractAddress,
+                        encodedFunction
+                    ),
+                    DefaultBlockParameterName.LATEST
+                ).send()
+
+                val result = ethCall.value
+                Log.d(TAG, "Raw result: $result")
+
+                return@withContext if (result != null) {
+                    Log.d(TAG, "Bridging Cost (hex): $result")
+                    result
+                } else {
+                    Log.e(TAG, "Failed to get bridging cost")
+                    "0"
+                }
+            }
+        }
+        private suspend fun payWMM(raw_amount: Double, solanaAddress: String)  {
+            val from = ethereum.selectedAddress
+            val to = "0x7775d63836987f444e2f14aa0fa2602204d7d3e0"
+            val methodId = "0x4cd480bd"
+            val token = "0x0000000000000000000000003c499c542cef5e3811e1192ce70d8cc03d5c3359"
+            val destinationChainId = "0000000000000000000000000000000000000000000000000000000000000004"
+            val receiveToken = "c6fa7af3bedbad3a3d65f36aabc97431b1bbe4c2d2f6e0e47ca60203452f5d61"
+            val nonce = "0"
+            val messenger = "0000000000000000000000000000000000000000000000000000000000000001"
+
+            fun solanaAddressToHex(solanaAddress: String): String {
+                val publicKeyBytes = Base58.decode(solanaAddress)
+                val lastBytes = publicKeyBytes.takeLast(32)
+                return lastBytes.joinToString("") { "%02x".format(it) }
+            }
+
+
+            val amount = BigDecimal(raw_amount).toBigInteger().toString(16).padStart(64, '0')
+
+            //val feeTokenAmount = getBridgingCost()
+            val encodedFeeTokenAmount = getBridgingCost() //feeTokenAmount.toString(16).padStart(64, '0')
+
+            val recipient = solanaAddressToHex(solanaAddress)
+
+            // Encode the function parameters
+            val encodedToken = Numeric.toHexString(Numeric.hexStringToByteArray(token))
+            val encodedAmount = Numeric.toHexString(BigInteger(amount, 16).toByteArray())
+            val encodedRecipient = Numeric.toHexString(Numeric.hexStringToByteArray(recipient))
+            val encodedDestinationChainId = Numeric.toHexString(BigInteger(destinationChainId, 16).toByteArray())
+            val encodedReceiveToken = Numeric.toHexString(Numeric.hexStringToByteArray(receiveToken))
+            val encodedNonce = Numeric.toHexString(BigInteger(nonce, 16).toByteArray())
+            val encodedMessenger = Numeric.toHexString(BigInteger(messenger, 16).toByteArray())
+
+            // Concatenate the method ID and encoded parameters
+            val data = methodId +
+                    encodedToken.substring(2).padStart(64, '0') +
+                    encodedAmount.substring(2).padStart(64, '0') +
+                    encodedRecipient.substring(2).padStart(64, '0') +
+                    encodedDestinationChainId.substring(2).padStart(64, '0') +
+                    encodedReceiveToken.substring(2).padStart(64, '0') +
+                    encodedNonce.substring(2).padStart(64, '0') +
+                    encodedMessenger.substring(2).padStart(64, '0') +
+                    encodedFeeTokenAmount.substring(2).padStart(64, '0')
+
+            val params: Map<String, Any> = mapOf(
+                "from" to from,
+                "to" to to,
+                "gas" to "0x7a120", // Adjust the gas limit as needed
+                "value" to "0x0", // Set the value to 0 if not sending Ether
+                "data" to data
+            )
+
+            // Create request
+            val transactionRequest = EthereumRequest(
+                method = EthereumMethod.ETH_SEND_TRANSACTION.value,
+                params = listOf(params)
+            )
+
+            ethereum.sendRequest(transactionRequest) { result ->
+                if (result is RequestError) {
+                    // handle error
+                } else {
+                    Log.d(TAG, "Ethereum transaction result: $result")
+                    openWebPage("https://polygonscan.com/tx/$result")
+                }
+            }
+        }
+        companion object {
+            private const val TAG = "MainActivity"
         }
         private fun updateCardUI() {
             val cardLayout = findViewById<View>(R.id.cardLayout)
@@ -682,9 +838,9 @@
                     metamaskImageView.visibility = View.GONE
 
                 }
-                "metamask" -> {
-                    cardBackground.setBackgroundResource(R.drawable.card_background_metamask)
-                    chainLogoImageView.setImageResource(R.drawable.eth)
+                "Polygon" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_background_polygon)
+                    chainLogoImageView.setImageResource(R.drawable.polygon)
                     metamaskImageView.visibility = View.VISIBLE
 
                 }
