@@ -239,8 +239,8 @@
                         true
                     }
                     R.id.nav_pay_hist -> {
-                        val intent = Intent(this@MainActivity, HistoryActivity::class.java)
-                        startActivity(intent)
+                        //val intent = Intent(this@MainActivity, HistoryActivity::class.java)
+                        //startActivity(intent)
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
