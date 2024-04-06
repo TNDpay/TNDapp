@@ -239,8 +239,8 @@
                         true
                     }
                     R.id.nav_pay_hist -> {
-                        //val intent = Intent(this@MainActivity, HistoryActivity::class.java)
-                        //startActivity(intent)
+                        val intent = Intent(this@MainActivity, HistoryActivity::class.java)
+                        startActivity(intent)
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
@@ -643,7 +643,7 @@
                             // Log the result and update UI on the main thread
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
                             connectedNetwork = "solana"
-                            updateCardUI()
+                            updateCardUI(userAddress)
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
@@ -707,7 +707,7 @@
 
 
                     connectedNetwork = "Polygon"
-                    updateCardUI()
+                    updateCardUI(ethereumAddress)
 
                     // Update the UI to reflect the connected state
                     runOnUiThread {
@@ -829,23 +829,32 @@
         companion object {
             private const val TAG = "MainActivity"
         }
-        private fun updateCardUI() {
+        private fun updateCardUI(address: String) {
             val cardLayout = findViewById<View>(R.id.cardLayout)
             val cardBackground = cardLayout.findViewById<LinearLayout>(R.id.card_background)
             val chainLogoImageView = cardLayout.findViewById<ImageView>(R.id.chainLogoImageView)
             val metamaskImageView = cardLayout.findViewById<ImageView>(R.id.metamaskImageView)
-
+            val address_card =  cardLayout.findViewById<TextView>(R.id.addressTextView)
             when (connectedNetwork) {
                 "solana" -> {
                     cardBackground.setBackgroundResource(R.drawable.card_background)
                     chainLogoImageView.setImageResource(R.drawable.token1_logo)
                     metamaskImageView.visibility = View.GONE
+                    address_card.text = Utils.shortenAddress(address)
 
                 }
                 "Polygon" -> {
                     cardBackground.setBackgroundResource(R.drawable.card_background_polygon)
                     chainLogoImageView.setImageResource(R.drawable.polygon)
                     metamaskImageView.visibility = View.VISIBLE
+                    address_card.text = Utils.shortenAddress(address)
+
+                }
+                "ETH" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_background_eth)
+                    chainLogoImageView.setImageResource(R.drawable.eth)
+                    metamaskImageView.visibility = View.VISIBLE
+                    address_card.text = Utils.shortenAddress(address)
 
                 }
             }

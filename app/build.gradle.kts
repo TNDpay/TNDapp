@@ -111,4 +111,6 @@ dependencies {
     implementation("org.web3j:crypto:4.8.7"){
         exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
     }
+    //idk
+    implementation("androidx.appcompat:appcompat:1.4.0")
 }

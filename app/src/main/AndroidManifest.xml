@@ -66,6 +66,9 @@
                 <data android:mimeType="application/vnd.com.example.beam" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
 
         <service
             android:name=".MyHostApduService"
