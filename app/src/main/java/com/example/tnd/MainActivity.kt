@@ -61,13 +61,10 @@
     import java.math.BigInteger
     import org.web3j.protocol.Web3j
     import org.web3j.protocol.http.HttpService
-    import org.web3j.tx.Contract
     import org.web3j.abi.datatypes.Function
     import org.web3j.abi.FunctionEncoder
-    import org.web3j.abi.FunctionReturnDecoder
     import org.web3j.abi.TypeReference
     import org.web3j.abi.datatypes.Address
-    import org.web3j.abi.datatypes.Uint
     import org.web3j.abi.datatypes.generated.Uint256
     import org.web3j.abi.datatypes.generated.Uint8
     import org.web3j.protocol.core.DefaultBlockParameterName
@@ -154,8 +151,8 @@
             exploreBoutton.setOnClickListener {
                 val intent = Intent(this@MainActivity, ExploreActivity::class.java)
                 startActivity(intent)
-                }
-                PayButton.setOnClickListener {
+            }
+            PayButton.setOnClickListener {
                     paymentAddress?.let { address ->
                         paymentAmount?.let { amount ->
                             tokenId?.let { id ->
@@ -219,7 +216,7 @@
                             }
                         }
                     }
-                }
+            }
 
 
             val configButton: Button = findViewById(R.id.configButton)
@@ -238,6 +235,12 @@
                     }
                     R.id.nav_disconnect_wallet -> {
                         disconnectWallet()
+                        drawerLayout.closeDrawer(GravityCompat.START)
+                        true
+                    }
+                    R.id.nav_pay_hist -> {
+                        val intent = Intent(this@MainActivity, HistoryActivity::class.java)
+                        startActivity(intent)
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
@@ -719,7 +722,8 @@
         private suspend fun getBridgingCost():String {
             return withContext(Dispatchers.IO) {
                 // Connect to an Ethereum node (like Infura)
-                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/cc859810620e4bcb9ea9bacb56efc31f"))
+                val api =BuildConfig.INFURA
+                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/api"))
                 val destinationChainId = "4"
                 val messenger = "1"
                 val token = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
