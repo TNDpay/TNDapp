@@ -46,7 +46,7 @@ The motivation behind TND is to address the limitations and fragmentation within
 - **Explore Places to Use Solana IRL:** Discover and explore local businesses and services where you can pay with Solana, expanding the ecosystem for real-life Solana usage.
 - ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
 - **Multi-chain payments, one of our goals is to be a decentralized universal payment method. Instead of having to use a different chain in each place, we aim to bring them all together.
-- ![GLOBAL ](https://imgur.com/a/1ZwOTp6) 
+- ![GLOBAL ](https://i.imgur.com/W5AfbVe.png) 
 
 
 ## Demo Video
