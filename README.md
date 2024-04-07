@@ -23,8 +23,8 @@ The motivation behind TND is to address the limitations and fragmentation within
 
 - **NFC (Near Field Communication):** Allows for secure and contactless communication between devices, making payments fast and convenient.
 - **Solana Blockchain:** Provides the backbone for our app, enabling quick transactions with minimal fees, ensuring scalability and efficiency.
-- **IronForge RPC:** A high-performance gateway to the Solana network, ensuring reliable and fast transaction processing for TND users.
-- **SolanaFM API:** For background checks of the address in the incoming payment request. 
+- **Helius RPC:** A high-performance gateway to the Solana network.
+- **Wormhole:** Multichain payments
 
 
 ## Getting Started
@@ -32,18 +32,20 @@ The motivation behind TND is to address the limitations and fragmentation within
 **Prerequisites:** Android Studio, Git
 
 **Setup:**
-1. Clone the repo: `git clone https://github.com/DerLomo/TND.git`
-2. Open in Android Studio: `Open > Choose the cloned directory`
-3. Build & Run: `Build > Make Project`, then `Run > Select Device`
+1. Download the app from telgram : `https://t.me/tndpay/3`
+2. Ensure you have a solana wallet to connect with
+3. Turn ON the NFC on both devices
+4. Launch TND app and press connect wallet
+5. In the Invoice request new payments
+6. For paying just tap yor phone to the vendor's device
 
 ## Features
 
 - **Pay with Your Favorite Token:** Whether you're buying coffee or paying for a service, TND lets you use any token you prefer, regardless of what the business accepts.
-- ![TND Payment Screen](https://i.imgur.com/A9UyAwY.png)
 - **Use Your Favorite Wallet:** TND is compatible with a wide range of Solana wallets, giving you the freedom to choose how you manage your digital assets.
-- ![TND Connect Wallet ](https://i.imgur.com/rq9WmRZ.png)
 - **Explore Places to Use Solana IRL:** Discover and explore local businesses and services where you can pay with Solana, expanding the ecosystem for real-life Solana usage.
-- ![TND Explore Map ](https://i.imgur.com/FygNDrZ.png)
+- ![TND Payment Screen](https://imgur.com/undefined)
+
 
 ## Demo Video
 
@@ -55,4 +57,3 @@ The motivation behind TND is to address the limitations and fragmentation within
 
 - **Website:** [TND Payments](https://www.tndpayments.com/)
 - **Twitter:** [TND Payments](https://twitter.com/TNDpayments)
-- **Launch Note:** Official launch coming soon. Stay tuned!
