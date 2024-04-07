@@ -16,11 +16,11 @@
 TND is a cutting-edge Android application designed to revolutionize the way we think about payments in the real world. Utilizing Near Field Communication (NFC) technology and the Solana blockchain, TND bridges the gap between digital currency and everyday transactions. It serves a dual purpose: acting as both a payment app for consumers and a payment terminal for businesses. This innovative solution is designed with universality in mind, ensuring that anyone, anywhere, can transact using their favorite tokens.
 
 ## Motivation
-
+![GLOBAL ](https://i.imgur.com/W5AfbVe.png) 
 The motivation behind TND is to address the limitations and fragmentation within the current digital payment landscape. Despite the growing acceptance of cryptocurrency, the lack of a universally accepted payment method has hindered its potential for day-to-day transactions. TND aims to eliminate these barriers, offering a seamless, secure, and efficient payment method that leverages the speed and low transaction costs of the Solana blockchain. Our goal is to empower users and businesses alike, making digital currency payments as easy and accessible as traditional fiat currency transactions.
 
 ## Tech Used
-![GLOBAL ](https://i.imgur.com/W5AfbVe.png) 
+
 - **NFC (Near Field Communication):** Allows for secure and contactless communication between devices, making payments fast and convenient.
 - **Solana Blockchain:** Provides the backbone for our app, enabling quick transactions with minimal fees, ensuring scalability and efficiency.
 - **Helius RPC:** A high-performance gateway to the Solana network.
