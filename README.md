@@ -29,7 +29,7 @@ The motivation behind TND is to address the limitations and fragmentation within
 
 ## Getting Started
 
-**Prerequisites:** Android Studio, Git
+**Prerequisites:** Android device with NFC, Solana wallet
 
 **Setup:**
 1. Download the app from telgram : `https://t.me/tndpay/3`
@@ -45,6 +45,8 @@ The motivation behind TND is to address the limitations and fragmentation within
 - **Use Your Favorite Wallet:** TND is compatible with a wide range of Solana wallets, giving you the freedom to choose how you manage your digital assets.
 - **Explore Places to Use Solana IRL:** Discover and explore local businesses and services where you can pay with Solana, expanding the ecosystem for real-life Solana usage.
 - ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
+- **Multi-chain payments, one of our goals is to be a decentralized universal payment method. Instead of having to use a different chain in each place, we aim to bring them all together.
+- ![GLOBAL ](https://imgur.com/a/1ZwOTp6) 
 
 
 ## Demo Video
