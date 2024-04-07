@@ -20,7 +20,7 @@ TND is a cutting-edge Android application designed to revolutionize the way we t
 The motivation behind TND is to address the limitations and fragmentation within the current digital payment landscape. Despite the growing acceptance of cryptocurrency, the lack of a universally accepted payment method has hindered its potential for day-to-day transactions. TND aims to eliminate these barriers, offering a seamless, secure, and efficient payment method that leverages the speed and low transaction costs of the Solana blockchain. Our goal is to empower users and businesses alike, making digital currency payments as easy and accessible as traditional fiat currency transactions.
 
 ## Tech Used
-
+![GLOBAL ](https://i.imgur.com/W5AfbVe.png) 
 - **NFC (Near Field Communication):** Allows for secure and contactless communication between devices, making payments fast and convenient.
 - **Solana Blockchain:** Provides the backbone for our app, enabling quick transactions with minimal fees, ensuring scalability and efficiency.
 - **Helius RPC:** A high-performance gateway to the Solana network.
@@ -44,9 +44,9 @@ The motivation behind TND is to address the limitations and fragmentation within
 - **Pay with Your Favorite Token:** Whether you're buying coffee or paying for a service, TND lets you use any token you prefer, regardless of what the business accepts.
 - **Use Your Favorite Wallet:** TND is compatible with a wide range of Solana wallets, giving you the freedom to choose how you manage your digital assets.
 - **Explore Places to Use Solana IRL:** Discover and explore local businesses and services where you can pay with Solana, expanding the ecosystem for real-life Solana usage.
-- ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
-- **Multi-chain payments, one of our goals is to be a decentralized universal payment method. Instead of having to use a different chain in each place, we aim to bring them all together.
-- ![GLOBAL ](https://i.imgur.com/W5AfbVe.png) 
+ ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
+- **Multi-chain payments:**  One of our goals is to be a decentralized universal payment method. Instead of having to use a different chain in each place, we aim to bring them all together.
+
 
 
 ## Demo Video
