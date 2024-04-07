@@ -10,7 +10,7 @@ object TokenData {
         TokenItem(5, "HNT", R.drawable.hnt, 8, "hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux"),
         TokenItem(5, "WIF", R.drawable.wif, 6, "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm"),
         TokenItem(6, "TREMP", R.drawable.tremp, 9, "FU1q8vJpZNUrmqsciSjp8bAKKidGsLmouB8CBdf8TKQv"),
-        TokenItem(6, "BODEN", R.drawable.jup, 9, "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o"),
+        TokenItem(6, "BODEN", R.drawable.boden, 9, "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o"),
     )
 
     val tokenList_eth = listOf(

@@ -159,7 +159,7 @@
                                 val selectedToken = spinnerToken.selectedItem as? TokenData.TokenItem
                                 val idSpinner = selectedToken?.id ?: 1
                                 when (connectedNetwork) {
-                                    "solana" -> {
+                                    "Solana" -> {
 
                                         if (canTransact) {
                                             Log.e("MainActivity", "Calling payment function")
@@ -275,10 +275,10 @@
             declineButton.setOnClickListener {
                 decline()
             }
-            val tokenAdapter = if (connectedNetwork == "solana") {
+            val tokenAdapter = if (connectedNetwork == "Solana") {
                 TokenAdapter(this, TokenData.tokenList)
             } else {
-                TokenAdapter(this, TokenData.tokenList_eth)
+                TokenAdapter(this, TokenData.tokenList_polygon)
             }
             spinnerToken.adapter = tokenAdapter
 
@@ -572,7 +572,14 @@
             // Add logic to check if the token is still valid (if possible)
             return authToken != null // and isValid(authToken)
         }
-
+        private fun updateTokenList(context: Context) {
+            val tokenAdapter = if (connectedNetwork == "Solana") {
+                TokenAdapter(context, TokenData.tokenList)
+            } else {
+                TokenAdapter(context, TokenData.tokenList_polygon)
+            }
+            spinnerToken.adapter = tokenAdapter
+        }
         private fun updateUserAddressUI(address: String) {
             val userAddressTextView: TextView = findViewById(R.id.userAddressTextView)
             userAddressTextView.text = Utils.shortenAddress(address)
@@ -642,13 +649,14 @@
                             storeAuthData(authToken, userAddress)
                             // Log the result and update UI on the main thread
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
-                            connectedNetwork = "solana"
+                            connectedNetwork = "Solana"
                             updateCardUI(userAddress)
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
                                 updateUserAddressUI(userAddress)
                                 cardLayout.visibility = View.VISIBLE
+                                updateTokenList(this@MainActivity)
                             }
                             val navigationView: NavigationView = findViewById(R.id.nav_view)
                             updateMenuItemsVisibility(navigationView)
@@ -836,7 +844,7 @@
             val metamaskImageView = cardLayout.findViewById<ImageView>(R.id.metamaskImageView)
             val address_card =  cardLayout.findViewById<TextView>(R.id.addressTextView)
             when (connectedNetwork) {
-                "solana" -> {
+                "Solana" -> {
                     cardBackground.setBackgroundResource(R.drawable.card_background)
                     chainLogoImageView.setImageResource(R.drawable.token1_logo)
                     metamaskImageView.visibility = View.GONE
