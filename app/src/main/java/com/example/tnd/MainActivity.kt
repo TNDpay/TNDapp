@@ -572,7 +572,8 @@
             // Add logic to check if the token is still valid (if possible)
             return authToken != null // and isValid(authToken)
         }
-        private fun updateTokenList(context: Context) {
+        private fun updateTokenList(context: Context, connectedNetwork:String) {
+            Log.d("MainActivity",connectedNetwork)
             val tokenAdapter = if (connectedNetwork == "Solana") {
                 TokenAdapter(context, TokenData.tokenList)
             } else {
@@ -656,7 +657,7 @@
                                 updateButton() // Update the connect button text
                                 updateUserAddressUI(userAddress)
                                 cardLayout.visibility = View.VISIBLE
-                                updateTokenList(this@MainActivity)
+                                updateTokenList(this@MainActivity,connectedNetwork)
                             }
                             val navigationView: NavigationView = findViewById(R.id.nav_view)
                             updateMenuItemsVisibility(navigationView)
@@ -731,7 +732,7 @@
             return withContext(Dispatchers.IO) {
                 // Connect to an Ethereum node (like Infura)
                 val api =BuildConfig.INFURA
-                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/api"))
+                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/$api"))
                 val destinationChainId = "4"
                 val messenger = "1"
                 val token = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
@@ -788,7 +789,7 @@
 
             //val feeTokenAmount = getBridgingCost()
             val encodedFeeTokenAmount = getBridgingCost() //feeTokenAmount.toString(16).padStart(64, '0')
-
+            Log.e(TAG, "GOT bridging cost $encodedFeeTokenAmount")
             val recipient = solanaAddressToHex(solanaAddress)
 
             // Encode the function parameters
