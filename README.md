@@ -44,14 +44,13 @@ The motivation behind TND is to address the limitations and fragmentation within
 - **Pay with Your Favorite Token:** Whether you're buying coffee or paying for a service, TND lets you use any token you prefer, regardless of what the business accepts.
 - **Use Your Favorite Wallet:** TND is compatible with a wide range of Solana wallets, giving you the freedom to choose how you manage your digital assets.
 - **Explore Places to Use Solana IRL:** Discover and explore local businesses and services where you can pay with Solana, expanding the ecosystem for real-life Solana usage.
- ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
 - **Multi-chain payments:**  One of our goals is to be a decentralized universal payment method. Instead of having to use a different chain in each place, we aim to bring them all together.
+ ![TND Payment Screen](https://i.imgur.com/TTH27ZO.png)
 
 
 
-## Demo Video
-
-[For a closer look at TND in action, check out our demo video on [Youtube](#). Stay tuned for updates and more features coming your way!](https://www.youtube.com/watch?v=_q4qV94190o)
+## Demo 
+https://www.canva.com/design/DAGB2GkXYmw/FLe2nrTzcJkYv7R6DnfK7Q/view?utm_content=DAGB2GkXYmw&utm_campaign=designshare&utm_medium=link&utm_source=editor
 
 ---
 
