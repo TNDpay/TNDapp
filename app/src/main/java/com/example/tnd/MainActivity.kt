@@ -604,16 +604,18 @@
 
         private fun connectWallet() {
             // Create an AlertDialog to prompt the user to choose the wallet type
-            val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
-            AlertDialog.Builder(this)
-                .setTitle("Select Wallet Type")
-                .setItems(walletOptions) { _, which ->
-                    when (which) {
-                        0 -> connectSolanaWallet()
-                        1 -> showMetaMaskWarningDialog()
-                    }
-                }
-                .show()
+            connectSolanaWallet()
+            //TODO: Use walletconnect instead of MetaMask api
+            //val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
+            //AlertDialog.Builder(this)
+            //    .setTitle("Select Wallet Type")
+            //    .setItems(walletOptions) { _, which ->
+            //        when (which) {
+            //            0 -> connectSolanaWallet()
+            //            1 -> showMetaMaskWarningDialog()
+            //        }
+            //    }
+            //    .show()
         }
 
         private fun showMetaMaskWarningDialog() {
@@ -863,6 +865,12 @@
                     cardBackground.setBackgroundResource(R.drawable.card_background_eth)
                     chainLogoImageView.setImageResource(R.drawable.eth)
                     metamaskImageView.visibility = View.VISIBLE
+                    address_card.text = Utils.shortenAddress(address)
+
+                }
+                "XMR" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_background_xmr)
+                    chainLogoImageView.setImageResource(R.drawable.xmr_logo)
                     address_card.text = Utils.shortenAddress(address)
 
                 }
