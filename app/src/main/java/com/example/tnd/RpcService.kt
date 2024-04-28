@@ -18,7 +18,7 @@ class RpcService {
             val originalRequest = chain.request()
             val originalUrl = originalRequest.url
             val urlWithApiKey = originalUrl.newBuilder()
-                .addQueryParameter("api-key", BuildConfig.HELIUS_API_KEY)
+                    .addQueryParameter("api-key", BuildConfig.HELIUS_API_KEY)
                 .build()
             val requestBuilder = originalRequest.newBuilder().url(urlWithApiKey)
                 .header("Content-Type", "application/json")
@@ -93,26 +93,38 @@ class RpcService {
             null
         }
     }
+    data class ConfigObject(
+        val mint: String,
+        val encoding: String
+    )
 
-    suspend fun getAsset(id: String): AssetResponse? {
-        val request = AssetRequest(
-            method = "getAsset",
-            params = AssetParams(id)
+    suspend fun getTokenAccountsByOwner(pubKey: String,Mint: String): Boolean {
+        val request = TokenOwnerRequest(
+            jsonrpc = "2.0",
+            id = 1,
+            method = "getTokenAccountsByOwner",
+            params = listOf(
+                pubKey,
+                mapOf("mint" to Mint),
+                mapOf("encoding" to "jsonParsed")
+            )
         )
-        return try {
-            val response = heliusApi.getAsset(request)
+        Log.e(TAG, request.toString())
+        try {
+            val response = heliusApi.getTokenAccountsByOwner(request)
+            Log.e(TAG, "Response body: ${response.body()?.toString()}")
             if (response.isSuccessful) {
-                Log.d(TAG, "getAsset Success: ${response.body()}")
-                response.body()
+                val tokenAccountResponse = response.body()
+                return tokenAccountResponse?.result?.value?.isNotEmpty() ?: false
             } else {
-                Log.e(TAG, "getAsset Error: HTTP ${response.code()} ${response.message()}")
-                null
+                Log.e(TAG, "Error: ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "getAsset Exception: ${e.message}", e)
-            null
+            Log.e(TAG, "Exception when calling getTokenAccountsByOwner: ${e.message}", e)
         }
+        return false
     }
+
 
     suspend fun getAssetsByOwner(ownerAddress: String, page: Int, limit: Int): AssetsByOwnerResponse? {
         val request = AssetsByOwnerRequest(

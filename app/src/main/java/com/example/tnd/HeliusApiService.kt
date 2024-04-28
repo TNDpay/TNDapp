@@ -20,7 +20,17 @@ interface HeliusApiService {
     @POST("/")
     suspend fun getAccountInfo(@Body request: AccountInfoRequest): Response<AccountInfoResponse>
 
+    @POST("/")
+    suspend fun getTokenAccountsByOwner(@Body request: TokenOwnerRequest): Response<TokenAccountResponse>
+
 }
+data class TokenOwnerRequest(
+    val jsonrpc: String = "2.0",
+    val id: Int = 1,
+    val method: String = "getTokenAccountsByOwner",
+    val params: List<Any>
+)
+
 data class SendTransactionRequest(
     val jsonrpc: String = "2.0",
     val id: Int = 1,
@@ -105,3 +115,42 @@ data class ErrorData(
     val returnData: Any?, // Type depends on what 'returnData' can contain
     val unitsConsumed: Int
 )
+
+data class TokenAccountResponse(
+    val jsonrpc: String,
+    val result: TokenAccountResult,
+    val id: String
+)
+
+data class TokenAccountResult(
+    val context: ContextData,
+    val value: List<TokenAccountItem>
+)
+
+data class TokenAccountItem(
+    val account: TokenAccountInfo,
+    val pubkey: String,
+    val state: String
+)
+
+data class TokenAccountInfo(
+    val data: TokenData,
+    val executable: Boolean,
+    val lamports: Long,
+    val owner: String,
+    val rentEpoch: String,
+    val space: Int
+)
+data class ParsedData(
+    val info: TokenInfo,
+    val type: String
+)
+
+
+data class TokenAmount(
+    val amount: String,
+    val decimals: Int,
+    val uiAmount: Double,
+    val uiAmountString: String
+)
+

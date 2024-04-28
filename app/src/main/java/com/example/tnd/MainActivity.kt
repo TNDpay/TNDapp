@@ -993,7 +993,6 @@
                         Log.e("MainActivity", "Token with ID $id not found.")
                         return@withContext // Exit the function if token is not found
                     }
-                    Log.d("MainActivity", "test 01012")
                     val mintAddress = token.mintAddress
                     val splMintAddress = PublicKey(mintAddress)
                     val splDecimals = token.decimals
@@ -1008,26 +1007,23 @@
 
                     // Calculate the associated token account address
                     val associatedTokenAddress = findAssociatedTokenAddress(toPublicKey, splMintAddress)
-                    Log.d("MainActivity", associatedTokenAddress.toBase58())
+                    val lol=associatedTokenAddress
+                    Log.d("MainActivity", "The associated tokenaddress is $lol")
                     // Check if the associated token account exists
-                    val associatedTokenAccountInfo = rpcService.getAccountInfo(associatedTokenAddress.toBase58())
-                    // Check if the value field inside associatedTokenAccountInfo is null, and log accordingly.
-                    val logMessage = if (associatedTokenAccountInfo?.result?.value == null) "null"
-                    else associatedTokenAccountInfo.toString()
+                    val token_init = rpcService.getTokenAccountsByOwner(toPublicKey.toString(),mintAddress)
 
-                    Log.d("MainActivity", "Associated Token Account Info: $logMessage")
-                    val isUnregisteredAssociatedToken = associatedTokenAccountInfo?.result?.value == null
+                    Log.d("MainActivity", "Associated Token Account Info: $token_init")
 
                     val transaction = Transaction()
                     transaction.feePayer = fromPublicKey
                     transaction.recentBlockhash = blockhash
-                    
+                    val tokenProgram="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                     // Create the associated token account if it doesn't exist
-                    if (isUnregisteredAssociatedToken) {
+                    if (!token_init) {
                         val createATokenInstruction = AssociatedTokenProgram.createAssociatedTokenAccountInstruction(
                             mint = splMintAddress,
                             associatedAccount = associatedTokenAddress,
-                            owner = toPublicKey,
+                            owner = PublicKey(tokenProgram),//toPublicKey,
                             payer = fromPublicKey
                         )
                         transaction.add(createATokenInstruction)
@@ -1153,7 +1149,6 @@
             walletAddress: PublicKey,
             tokenMintAddress: PublicKey
         ): PublicKey {
-            // Make sure to replace this with the actual Associated Token Account Program ID for your needs
             val associatedTokenAccountProgramId = PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
 
             // Construct the seeds for the findProgramAddress method
