@@ -8,14 +8,7 @@
         android:id="@+id/nav_disconnect_wallet"
         android:title="Disconnect Wallet"
         android:icon="@drawable/disconnect" />
-    <item
-        android:id="@+id/nav_pay_hist"
-        android:title="Payment History"
-        android:icon="@drawable/pay_history" />
-    <item
-        android:id="@+id/nav_config"
-        android:title="Configuration"
-        android:icon="@drawable/config" />
+
     <item
         android:id="@+id/nav_divider"
         android:title=""

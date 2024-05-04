@@ -183,9 +183,7 @@
                                                     // Convert the amount from Double to Long based on the token's decimals
                                                     val amountLong = (amount * Math.pow(10.0, tokenOut.decimals.toDouble())).toLong()
                                                     if (tokenOut.id==1){
-                                                        //Jupiter api doesn't provide a swap function for sol output
-                                                        //We perform the swap on sender account and then transact swapped SOL
-                                                        //TO DO
+                                                        performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
                                                     }else {
                                                         performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
                                                     }
@@ -238,12 +236,12 @@
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
-                    R.id.nav_pay_hist -> {
-                        val intent = Intent(this@MainActivity, HistoryActivity::class.java)
-                        startActivity(intent)
-                        drawerLayout.closeDrawer(GravityCompat.START)
-                        true
-                    }
+                    //R.id.nav_pay_hist -> {
+                        //val intent = Intent(this@MainActivity, HistoryActivity::class.java)
+                        //startActivity(intent)
+                        //drawerLayout.closeDrawer(GravityCompat.START)
+                        //true
+                    //}
                     R.id.nav_twitter -> {
                         // Handle Twitter option by opening the Twitter URL
                         openWebPage("https://twitter.com/TNDpayments")
@@ -275,7 +273,7 @@
             declineButton.setOnClickListener {
                 decline()
             }
-            val tokenAdapter = if (connectedNetwork == "Solana") {
+            val tokenAdapter = if (connectedNetwork == "Polygon") {
                 TokenAdapter(this, TokenData.tokenList)
             } else {
                 TokenAdapter(this, TokenData.tokenList_polygon)
@@ -1017,13 +1015,13 @@
                     val transaction = Transaction()
                     transaction.feePayer = fromPublicKey
                     transaction.recentBlockhash = blockhash
-                    val tokenProgram="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    val AtokenProgram="ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
                     // Create the associated token account if it doesn't exist
                     if (!token_init) {
                         val createATokenInstruction = AssociatedTokenProgram.createAssociatedTokenAccountInstruction(
                             mint = splMintAddress,
                             associatedAccount = associatedTokenAddress,
-                            owner = PublicKey(tokenProgram),//toPublicKey,
+                            owner = toPublicKey,
                             payer = fromPublicKey
                         )
                         transaction.add(createATokenInstruction)
