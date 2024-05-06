@@ -160,7 +160,6 @@
                                 val idSpinner = selectedToken?.id ?: 1
                                 when (connectedNetwork) {
                                     "Solana" -> {
-
                                         if (canTransact) {
                                             Log.e("MainActivity", "Calling payment function")
                                             if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
@@ -381,10 +380,8 @@
             scope.launch {
                 withContext(Dispatchers.IO) {
                     try {
-                        // Decode the base64 encoded transaction
-                        //val swapTransaction=""
+                        // Decode the base64 encoded transaction "
                         val transactionBytes = Base64.decode(swapTransaction, Base64.DEFAULT)
-
                         // Start the signing process
                         val walletAdapterClient = MobileWalletAdapter() // Initialize properly with context and other parameters
                         val result = walletAdapterClient.transact(activityResultSender) {
@@ -498,14 +495,9 @@
                         val swapQuote = response.body()
                         val destToken: String
                         Log.d("SwapFunction", "token mint address : $output")
-                        if (output=="So11111111111111111111111111111111111111112"){
-                            destToken=receiverAddr
-                            Log.d("SwapFunction", "Sol addres should be sent to : $receiverAddr")
-                        }else {
-                            val publicAddresReceiver=PublicKey(receiverAddr)
-                            val publicMintRT=PublicKey(output)
-                            destToken=findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
-                        }
+                        val publicAddresReceiver=PublicKey(receiverAddr)
+                        val publicMintRT=PublicKey(output)
+                        destToken=findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
                         // Proceed to Step 2: Obtain swap instructions using the swap quote
                         swapQuote?.let {
                             val swapRequest = SwapRequest(

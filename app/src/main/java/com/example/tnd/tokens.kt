@@ -20,6 +20,9 @@ object TokenData {
     val tokenList_polygon = listOf(
         TokenItem(1, "USDC", R.drawable.token2_logo, 6, "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359")
     )
+    val tokenList_soltmp = listOf(
+        TokenItem(1, "SOL", R.drawable.token1_logo, 9, "So11111111111111111111111111111111111111112")
+    )
 
     data class TokenItem(
         val id: Int,
