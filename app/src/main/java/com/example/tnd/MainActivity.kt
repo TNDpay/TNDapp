@@ -181,11 +181,7 @@
                                                 if (tokenIn != null && tokenOut != null) {
                                                     // Convert the amount from Double to Long based on the token's decimals
                                                     val amountLong = (amount * Math.pow(10.0, tokenOut.decimals.toDouble())).toLong()
-                                                    if (tokenOut.id==1){
-                                                        performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
-                                                    }else {
-                                                        performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
-                                                    }
+                                                    performSwap(tokenIn.mintAddress, tokenOut.mintAddress, amountLong, userAddress, address)
                                                 } else {
                                                     Log.e("MainActivity", "One of the tokens could not be found.")
                                                 }
@@ -383,6 +379,7 @@
                         // Decode the base64 encoded transaction "
                         val transactionBytes = Base64.decode(swapTransaction, Base64.DEFAULT)
                         // Start the signing process
+                        Log.d("sendSwap", "Swap Transaction Response: $transactionBytes")
                         val walletAdapterClient = MobileWalletAdapter() // Initialize properly with context and other parameters
                         val result = walletAdapterClient.transact(activityResultSender) {
                             // These URI and token values should be provided appropriately
@@ -495,9 +492,14 @@
                         val swapQuote = response.body()
                         val destToken: String
                         Log.d("SwapFunction", "token mint address : $output")
-                        val publicAddresReceiver=PublicKey(receiverAddr)
-                        val publicMintRT=PublicKey(output)
-                        destToken=findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
+                        if (output=="So11111111111111111111111111111111111111112"){
+                            destToken=receiverAddr
+                            Log.d("SwapFunction", "Sol addres should be sent to : $receiverAddr")
+                        }else {
+                            val publicAddresReceiver=PublicKey(receiverAddr)
+                            val publicMintRT=PublicKey(output)
+                            destToken=findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
+                        }
                         // Proceed to Step 2: Obtain swap instructions using the swap quote
                         swapQuote?.let {
                             val swapRequest = SwapRequest(
@@ -541,7 +543,6 @@
                 }
             })
         }
-
         private fun openWebPage(url: String) {
             val builder = CustomTabsIntent.Builder()
             val colorSchemeParams = CustomTabColorSchemeParams.Builder()
@@ -1007,7 +1008,6 @@
                     val transaction = Transaction()
                     transaction.feePayer = fromPublicKey
                     transaction.recentBlockhash = blockhash
-                    val AtokenProgram="ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
                     // Create the associated token account if it doesn't exist
                     if (!token_init) {
                         val createATokenInstruction = AssociatedTokenProgram.createAssociatedTokenAccountInstruction(
