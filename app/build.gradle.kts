@@ -116,6 +116,6 @@ dependencies {
     //idk
     implementation("androidx.appcompat:appcompat:1.4.0")
     //WalletConnect
-    implementation("com.walletconnect:android-core:release_version")
-    implementation("com.walletconnect:auth:release_version")
+    implementation("com.walletconnect:android-core:1.31.3")
+    implementation("com.walletconnect:auth:1.28.2")
 }

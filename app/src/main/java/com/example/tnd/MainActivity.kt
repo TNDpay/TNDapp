@@ -239,24 +239,24 @@
                     //}
                     R.id.nav_twitter -> {
                         // Handle Twitter option by opening the Twitter URL
-                        openWebPage("https://twitter.com/TNDpayments")
+                        Utils.openWebPage(this,"https://twitter.com/TNDpayments")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
                     R.id.nav_telegram -> {
                         // Handle Twitter option by opening the Twitter URL
-                        openWebPage("https://t.me/tndpay")
+                        Utils.openWebPage(this,"https://t.me/tndpay")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
                     R.id.nav_website -> {
                         // Handle Website option by opening the website URL
-                        openWebPage("https://www.tndpayments.com/")
+                        Utils.openWebPage(this,"https://www.tndpayments.com/")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
                     R.id.nav_explore_form ->{
-                        openWebPage("https://forms.gle/jD5Rrdt1hcCcqdgk7")
+                        Utils.openWebPage(this,"https://forms.gle/jD5Rrdt1hcCcqdgk7")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
@@ -293,18 +293,6 @@
             }
             updateMenuItemsVisibility(navigationView)
         }
-        private fun updateBackgroundBasedOnNFCState() {
-            val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(this)
-            val backgroundImageView = findViewById<ImageView>(R.id.backgroundImageView)
-            if (nfcAdapter != null && nfcAdapter.isEnabled) {
-                // NFC is enabled - Set the image for NFC on state
-                backgroundImageView.setImageResource(R.drawable.nfc_on) // Use your actual drawable resource
-            } else {
-                // NFC is disabled or not available - Set the image for NFC off state
-                backgroundImageView.setImageResource(R.drawable.nfc_off) // Use your actual drawable resource
-            }
-        }
-
 
         private fun updateMenuItemsVisibility(navigationView: NavigationView) {
             val menu = navigationView.menu
@@ -326,49 +314,7 @@
                 Log.d("MenuVisibility", "After setting connect visible: ${connectWalletMenuItem.isVisible}")
             }
         }
-        fun checkAddressForFlag(context: Context, address: String) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url("https://api.solana.fm/v0/accounts/$address")
-                    .get()
-                    .addHeader("accept", "application/json")
-                    .build()
 
-                try {
-                    val response = client.newCall(request).execute()
-                    if (response.isSuccessful) {
-                        val responseBody = response.body?.string()
-                        if (responseBody != null) {
-                            val gson = Gson()
-                            val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
-                            val status = jsonResponse.get("status").asString
-                            if (status == "Success") {
-                                val result = jsonResponse.getAsJsonObject("result")
-                                val data = result.getAsJsonObject("data")
-                                val flag = data.get("flag").asString
-                                if (flag == "hacker") {
-                                    withContext(Dispatchers.Main) {
-                                        AlertDialog.Builder(context).apply {
-                                            setTitle("Security Alert")
-                                            setMessage("This address is flagged as a hacker: $address")
-                                            setPositiveButton("OK", null)
-                                            create().show()
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Handle response error
-                        Log.e("checkAddressForFlag", "Failed to fetch address data: ${response.message}")
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // Handle network error or parsing error
-                }
-            }
-        }
         fun Context.toast(message: String) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
@@ -400,7 +346,7 @@
                                                 .setTitle("Transaction Successful")
                                                 .setMessage("Do you want to view the transaction on Solana Explorer?")
                                                 .setPositiveButton("Yes") { dialog, id ->
-                                                    openWebPage("https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
+                                                    Utils.openWebPage(this@MainActivity,"https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
                                                 }
                                                 .setNegativeButton("No") { dialog, id ->
                                                     dialog.dismiss()
@@ -498,7 +444,7 @@
                         }else {
                             val publicAddresReceiver=PublicKey(receiverAddr)
                             val publicMintRT=PublicKey(output)
-                            destToken=findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
+                            destToken=SolanaUtils.findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
                         }
                         // Proceed to Step 2: Obtain swap instructions using the swap quote
                         swapQuote?.let {
@@ -543,18 +489,6 @@
                 }
             })
         }
-        private fun openWebPage(url: String) {
-            val builder = CustomTabsIntent.Builder()
-            val colorSchemeParams = CustomTabColorSchemeParams.Builder()
-                .build()
-
-            builder.setDefaultColorSchemeParams(colorSchemeParams)
-            val customTabsIntent = builder.build()
-
-            customTabsIntent.launchUrl(this, Uri.parse(url))
-        }
-
-
 
         private fun hasValidAuthToken(): Boolean {
             // Retrieve the saved auth token from SharedPreferences or similar storage
@@ -597,6 +531,7 @@
             // Create an AlertDialog to prompt the user to choose the wallet type
             connectSolanaWallet()
             //TODO: Use walletconnect instead of MetaMask api
+
             //val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
             //AlertDialog.Builder(this)
             //    .setTitle("Select Wallet Type")
@@ -607,17 +542,6 @@
             //        }
             //    }
             //    .show()
-        }
-
-        private fun showMetaMaskWarningDialog() {
-            AlertDialog.Builder(this)
-                .setTitle("MetaMask Warning")
-                .setMessage("Please note that the MetaMask integration is currently in beta. Make sure you are connected to the Polygon network in MetaMask. Bridge payments can cost up to \$2.")
-                .setPositiveButton("Proceed") { _, _ ->
-                    connectMetaMask()
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
         }
 
         private fun connectSolanaWallet() {
@@ -644,7 +568,7 @@
                             // Log the result and update UI on the main thread
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
                             connectedNetwork = "Solana"
-                            updateCardUI(userAddress)
+                            UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
                                 updateButton() // Update the connect button text
@@ -709,7 +633,7 @@
 
 
                     connectedNetwork = "Polygon"
-                    updateCardUI(ethereumAddress)
+                    UIUtils.updateCardUI(this, ethereumAddress, connectedNetwork)
 
                     // Update the UI to reflect the connected state
                     runOnUiThread {
@@ -824,49 +748,14 @@
                     // handle error
                 } else {
                     Log.d(TAG, "Ethereum transaction result: $result")
-                    openWebPage("https://polygonscan.com/tx/$result")
+                    Utils.openWebPage(this,"https://polygonscan.com/tx/$result")
                 }
             }
         }
         companion object {
             private const val TAG = "MainActivity"
         }
-        private fun updateCardUI(address: String) {
-            val cardLayout = findViewById<View>(R.id.cardLayout)
-            val cardBackground = cardLayout.findViewById<LinearLayout>(R.id.card_background)
-            val chainLogoImageView = cardLayout.findViewById<ImageView>(R.id.chainLogoImageView)
-            val metamaskImageView = cardLayout.findViewById<ImageView>(R.id.metamaskImageView)
-            val address_card =  cardLayout.findViewById<TextView>(R.id.addressTextView)
-            when (connectedNetwork) {
-                "Solana" -> {
-                    cardBackground.setBackgroundResource(R.drawable.card_background)
-                    chainLogoImageView.setImageResource(R.drawable.token1_logo)
-                    metamaskImageView.visibility = View.GONE
-                    address_card.text = Utils.shortenAddress(address)
 
-                }
-                "Polygon" -> {
-                    cardBackground.setBackgroundResource(R.drawable.card_background_polygon)
-                    chainLogoImageView.setImageResource(R.drawable.polygon)
-                    metamaskImageView.visibility = View.VISIBLE
-                    address_card.text = Utils.shortenAddress(address)
-
-                }
-                "ETH" -> {
-                    cardBackground.setBackgroundResource(R.drawable.card_background_eth)
-                    chainLogoImageView.setImageResource(R.drawable.eth)
-                    metamaskImageView.visibility = View.VISIBLE
-                    address_card.text = Utils.shortenAddress(address)
-
-                }
-                "XMR" -> {
-                    cardBackground.setBackgroundResource(R.drawable.card_background_xmr)
-                    chainLogoImageView.setImageResource(R.drawable.xmr_logo)
-                    address_card.text = Utils.shortenAddress(address)
-
-                }
-            }
-        }
         private fun disconnectWallet() {
 
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
@@ -924,7 +813,8 @@
             nfcAdapter?.enableReaderMode(this, this,
                 NfcAdapter.FLAG_READER_NFC_A or NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
                 null)
-            updateBackgroundBasedOnNFCState()
+            val backgroundImageView = findViewById<ImageView>(R.id.backgroundImageView)
+            UIUtils.updateBackgroundBasedOnNFCState(backgroundImageView)
         }
 
         override fun onPause() {
@@ -953,7 +843,7 @@
                         findViewById<TextView>(R.id.textViewTokenName).text = paymentRequestText
 
                         // Only show the pay button if we have valid payment info
-                        checkAddressForFlag(this,paymentInfo[0])
+                        SolanaUtils.checkAddressForFlag(this,paymentInfo[0])
 
                         PayButton.visibility = if (paymentAddress != null && paymentAmount != null) View.VISIBLE else View.GONE
                         declineButton.visibility = View.VISIBLE
@@ -997,7 +887,7 @@
                     val blockhash: String = blockhashResult?.result?.value?.blockhash ?: throw IllegalStateException("Blockhash could not be retrieved")
 
                     // Calculate the associated token account address
-                    val associatedTokenAddress = findAssociatedTokenAddress(toPublicKey, splMintAddress)
+                    val associatedTokenAddress = SolanaUtils.findAssociatedTokenAddress(toPublicKey, splMintAddress)
                     val lol=associatedTokenAddress
                     Log.d("MainActivity", "The associated tokenaddress is $lol")
                     // Check if the associated token account exists
@@ -1022,7 +912,7 @@
                     // Add the SPL Token transfer instruction
                     transaction.add(
                         TokenProgram.transfer(
-                            source = findAssociatedTokenAddress(fromPublicKey, splMintAddress),
+                            source = SolanaUtils.findAssociatedTokenAddress(fromPublicKey, splMintAddress),
                             destination = associatedTokenAddress,
                             owner = fromPublicKey,
                             amount = amountInSmallestUnit
@@ -1052,7 +942,7 @@
                                                 .setTitle("Transaction Successful")
                                                 .setMessage("Do you want to view the transaction on Solana Explorer?")
                                                 .setPositiveButton("Yes") { dialog, id ->
-                                                    openWebPage("https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
+                                                    Utils.openWebPage(this@MainActivity,"https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
                                                 }
                                                 .setNegativeButton("No") { dialog, id ->
                                                     dialog.dismiss()
@@ -1117,7 +1007,7 @@
                                     .setPositiveButton("Yes") { dialog, id ->
                                         // User clicked Yes button
                                         val url = "https://solana.fm/tx/$txid?cluster=mainnet-alpha"
-                                        openWebPage(url)
+                                        Utils.openWebPage(this@MainActivity,url)
                                     }
                                     .setNegativeButton("No") { dialog, id ->
                                         // User clicked No button or dismissed the dialog
@@ -1135,22 +1025,7 @@
                 }
             }
         }
-        fun findAssociatedTokenAddress(
-            walletAddress: PublicKey,
-            tokenMintAddress: PublicKey
-        ): PublicKey {
-            val associatedTokenAccountProgramId = PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
 
-            // Construct the seeds for the findProgramAddress method
-            val seeds = listOf(
-                walletAddress.toByteArray(),
-                TokenProgram.PROGRAM_ID.toByteArray(),
-                tokenMintAddress.toByteArray()
-            )
-
-            // Find and return the associated token address
-            return PublicKey.findProgramAddress(seeds, associatedTokenAccountProgramId).address
-        }
         // Custom adapter for the token spinner
         class TokenAdapter(context: Context, tokenList: List<TokenData.TokenItem>) : ArrayAdapter<TokenData.TokenItem>(context, 0, tokenList) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
