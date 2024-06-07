@@ -15,6 +15,7 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
+
 android {
     namespace = "com.example.tnd"
     compileSdk = 33
@@ -31,12 +32,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val ironForgeApiKey = localProperties["IronForge_API_KEY"] as? String
-        if (ironForgeApiKey != null) {
-            buildConfigField("String", "IRONFORGE_API_KEY", "\"$ironForgeApiKey\"")
-        } else {
-            throw GradleException("IronForge API Key not found in local.properties")
-        }
     }
 
     buildTypes {
@@ -115,7 +110,4 @@ dependencies {
     }
     //idk
     implementation("androidx.appcompat:appcompat:1.4.0")
-    //WalletConnect
-    implementation("com.walletconnect:android-core:1.31.3")
-    implementation("com.walletconnect:auth:1.28.2")
 }
