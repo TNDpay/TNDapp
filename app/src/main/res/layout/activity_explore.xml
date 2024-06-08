@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="Find places to use Solana"
+        android:text="Find places to use Monero"
         android:textSize="24sp"
         android:gravity="center"
         android:background="@android:color/white"/>

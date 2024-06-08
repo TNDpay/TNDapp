@@ -18,7 +18,6 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.util.Log
-import com.example.tnd.TokenData
 
 
 
@@ -79,7 +78,7 @@ class InvoiceActivity : Activity() {
         })
 
         // Set up the token spinner
-        val tokenAdapter = TokenAdapter(this, TokenData.tokenList)
+        val tokenAdapter = TokenAdapter(this, TokenData.tokenList_xmr)
         spinnerToken.adapter = tokenAdapter
 
 

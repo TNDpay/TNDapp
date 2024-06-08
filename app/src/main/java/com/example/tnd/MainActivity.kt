@@ -43,31 +43,9 @@
     import retrofit2.Retrofit
     import retrofit2.converter.gson.GsonConverterFactory
     import kotlin.math.pow
-    import androidx.browser.customtabs.CustomTabsIntent
-    import androidx.browser.customtabs.CustomTabColorSchemeParams
     import android.widget.Toast
     import android.app.AlertDialog
-    import android.icu.math.BigDecimal
-    import okhttp3.OkHttpClient
-    import okhttp3.Request
-    import com.google.gson.Gson
-    import com.google.gson.JsonObject
     import io.metamask.androidsdk.Ethereum
-    import io.metamask.androidsdk.Dapp
-    import io.metamask.androidsdk.RequestError
-    import android.widget.LinearLayout
-    import io.metamask.androidsdk.*
-    import org.web3j.utils.Numeric
-    import java.math.BigInteger
-    import org.web3j.protocol.Web3j
-    import org.web3j.protocol.http.HttpService
-    import org.web3j.abi.datatypes.Function
-    import org.web3j.abi.FunctionEncoder
-    import org.web3j.abi.TypeReference
-    import org.web3j.abi.datatypes.Address
-    import org.web3j.abi.datatypes.generated.Uint256
-    import org.web3j.abi.datatypes.generated.Uint8
-    import org.web3j.protocol.core.DefaultBlockParameterName
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -91,9 +69,6 @@
         private lateinit var addressTextView: TextView
         private lateinit var cardLayout: View
         private var connectedNetwork: String = ""
-        private lateinit var ethereum: Ethereum
-
-
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -190,9 +165,25 @@
                                             Log.e("MainActivity", "Cannot make payment: No user address or can't transact.")
                                         }
                                     }
-                                    "Polygon" -> {
+                                    "XMR" -> {
                                         CoroutineScope(Dispatchers.Main).launch {
+                                            // Create the URI for the deeplink
+                                            val uri = Uri.parse("monero:$address?tx_amount=$amount")
 
+                                            // Create an Intent to launch the deeplink
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            val action = intent.action
+                                            val data = intent.data
+                                            // Check if there's an activity that can handle this Intent
+                                            if (Intent.ACTION_VIEW == action && data != null) {
+                                                // Parse the URI to get the address
+                                                val address = data.getQueryParameter("address")
+                                                if (address != null) {
+                                                    // Use the address as needed in your app
+                                                    Log.d("Deeplink", "Monero address: $address")
+                                                    // For example, update the UI or start a new activity with the address
+                                                }
+                                            }
                                         }
                                     }
 
@@ -525,38 +516,37 @@
 
         private fun connectWallet() {
             // Create an AlertDialog to prompt the user to choose the wallet type
-            connectSolanaWallet()
             val walletOptions = arrayOf("Monero", "Solana")
             AlertDialog.Builder(this)
                 .setTitle("Select Wallet Type")
                 .setItems(walletOptions) { _, which ->
                     when (which) {
-                        //0 -> connectCakeWallet()
+                        0 -> connectCakeWallet(this@MainActivity)
                         1 -> connectSolanaWallet()
                     }
                 }
                 .show()
         }
         fun connectCakeWallet(context: Context) {
-            // Define the Monero address and amount
-            val moneroAddress = "4AiHeQvLQurfWz9bWygQRdfmeobfEb8pkSXPtT5h4saq9wRAC9YuodkcK2V4zFja3nAhfLVxiACBvFcFVzSqVuvHJp8Fen5"
-            val amount = 0.001
-
-            // Create the URI for the deeplink
-            val uri = Uri.parse("monero:$moneroAddress?tx_amount=$amount")
-
-            // Create an Intent to launch the deeplink
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-
-            // Check if there's an activity that can handle this Intent
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-            } else {
-                // Handle the case where no application can handle the deeplink
-                // You can show a message to the user or log an error
-                // For example:
-                println("No application can handle the Monero deeplink.")
+            // Save the values from the successful result
+            userAddress = "Monero"
+            authToken = ""
+            canTransact = true
+            // After successful wallet connection
+            storeAuthData(authToken, userAddress)
+            // Log the result and update UI on the main thread
+            Log.d("MainActivity", "Connected to XMR Wallet: $userAddress")
+            connectedNetwork = "XMR"
+            UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
+            runOnUiThread {
+                connectWalletButton.visibility = View.GONE
+                updateButton() // Update the connect button text
+                updateUserAddressUI(userAddress)
+                cardLayout.visibility = View.VISIBLE
+                updateTokenList(this@MainActivity,connectedNetwork)
             }
+            val navigationView: NavigationView = findViewById(R.id.nav_view)
+            updateMenuItemsVisibility(navigationView)
         }
         private fun connectSolanaWallet() {
             scope.launch {
@@ -628,37 +618,6 @@
             }
         }
 
-        private fun connectMetaMask() {
-            ethereum = Ethereum(context = this)
-
-            val dapp = Dapp("TND Pay", "https://www.tndpayments.com/")
-
-            // This is the same as calling eth_requestAccounts
-            ethereum.connect(dapp) { result ->
-                if (result is RequestError) {
-                    Log.e("MainActivity", "MetaMask connection error: ${result.message}")
-                    runOnUiThread {
-                        // Update the UI to show an error message
-                    }
-                } else {
-                    Log.d("MainActivity", "MetaMask connection result: $result")
-                    // Parse the result to get the user's Ethereum address
-                    val ethereumAddress = result.toString()
-
-
-                    connectedNetwork = "Polygon"
-                    UIUtils.updateCardUI(this, ethereumAddress, connectedNetwork)
-
-                    // Update the UI to reflect the connected state
-                    runOnUiThread {
-                        connectWalletButton.visibility = View.GONE
-                        updateButton()
-                        updateUserAddressUI(ethereumAddress)
-                        cardLayout.visibility = View.VISIBLE
-                    }
-                }
-            }
-        }
         companion object {
             private const val TAG = "MainActivity"
         }

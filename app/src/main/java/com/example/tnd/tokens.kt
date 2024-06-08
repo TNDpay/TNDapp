@@ -23,6 +23,9 @@ object TokenData {
     val tokenList_soltmp = listOf(
         TokenItem(1, "SOL", R.drawable.token1_logo, 9, "So11111111111111111111111111111111111111112")
     )
+    val tokenList_xmr = listOf(
+        TokenItem(1, "XMR", R.drawable.xmr_logo, 9, "xmr_is_amazing")
+    )
 
     data class TokenItem(
         val id: Int,
