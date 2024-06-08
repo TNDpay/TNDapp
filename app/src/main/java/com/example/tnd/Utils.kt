@@ -57,37 +57,5 @@ class Utils {
             return address
         }
 
-        fun getTokenPriceInDollars(tokenItem: TokenData.TokenItem, callback: (Double?) -> Unit) {
-            // Check if the token is USDC, return the value 1 directly
-            if (tokenItem.name.equals("USDC", ignoreCase = true)) {
-                callback(1.0)
-                return
-            }
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl("https://price.jup.ag/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-            val service = retrofit.create(JupiterApiService::class.java)
-            // Use tokenItem.name directly to build the correct request
-            service.getPrice(tokenItem.name).enqueue(object : retrofit2.Callback<PriceResponse> {
-                override fun onResponse(call: retrofit2.Call<PriceResponse>, response: retrofit2.Response<PriceResponse>) {
-                    Log.d("Utils", "API Response: $response")
-                    if (response.isSuccessful) {
-                        // Assuming 'tokenItem.name' is the key in the response map
-                        val price = response.body()?.data?.get(tokenItem.name)?.price
-                        callback(price)
-                    } else {
-                        callback(null)
-                    }
-                }
-
-                override fun onFailure(call: retrofit2.Call<PriceResponse>, t: Throwable) {
-                    callback(null)
-                }
-            })
-        }
-
-
     }
 }

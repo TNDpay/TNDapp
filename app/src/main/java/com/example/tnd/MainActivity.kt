@@ -120,6 +120,7 @@
                 // Start InvoiceActivity when the charge button is clicked
                 val intent = Intent(this@MainActivity, InvoiceActivity::class.java)
                 intent.putExtra("USER_ADDRESS", userAddress)
+                intent.putExtra("CONNECTED_NETWORK", connectedNetwork)
                 startActivity(intent)
             }
             val exploreBoutton: Button = findViewById(R.id.exploreButton)
@@ -167,26 +168,19 @@
                                     }
                                     "XMR" -> {
                                         CoroutineScope(Dispatchers.Main).launch {
-                                            // Create the URI for the deeplink
                                             val uri = Uri.parse("monero:$address?tx_amount=$amount")
-
-                                            // Create an Intent to launch the deeplink
                                             val intent = Intent(Intent.ACTION_VIEW, uri)
-                                            val action = intent.action
-                                            val data = intent.data
-                                            // Check if there's an activity that can handle this Intent
-                                            if (Intent.ACTION_VIEW == action && data != null) {
-                                                // Parse the URI to get the address
-                                                val address = data.getQueryParameter("address")
-                                                if (address != null) {
-                                                    // Use the address as needed in your app
-                                                    Log.d("Deeplink", "Monero address: $address")
-                                                    // For example, update the UI or start a new activity with the address
-                                                }
+
+                                            // Verify that there is an app available to handle the Intent
+                                            if (intent.resolveActivity(this@MainActivity.packageManager) != null) {
+                                                this@MainActivity.startActivity(intent)
+                                            } else {
+                                                // Handle the case where no app can handle the Intent
+                                                // For example, show a Toast or a dialog
+                                                Toast.makeText(this@MainActivity, "No application found to handle Monero deeplink", Toast.LENGTH_LONG).show()
                                             }
                                         }
                                     }
-
                                     else -> {
                                         Log.e("MainActivity", "ERROR")
                                     }
@@ -484,15 +478,17 @@
             // Add logic to check if the token is still valid (if possible)
             return authToken != null // and isValid(authToken)
         }
-        private fun updateTokenList(context: Context, connectedNetwork:String) {
-            Log.d("MainActivity",connectedNetwork)
-            val tokenAdapter = if (connectedNetwork == "Solana") {
-                TokenAdapter(context, TokenData.tokenList)
-            } else {
-                TokenAdapter(context, TokenData.tokenList_polygon)
+        private fun updateTokenList(context: Context, connectedNetwork: String) {
+            Log.d("MainActivity", connectedNetwork)
+            val tokenAdapter = when (connectedNetwork) {
+                "Solana" -> TokenAdapter(context, TokenData.tokenList)
+                "Polygon" -> TokenAdapter(context, TokenData.tokenList_polygon)
+                "XMR" -> TokenAdapter(context, TokenData.tokenList_xmr)
+                else -> TokenAdapter(context, TokenData.tokenList_polygon)
             }
             spinnerToken.adapter = tokenAdapter
         }
+
         private fun updateUserAddressUI(address: String) {
             val userAddressTextView: TextView = findViewById(R.id.userAddressTextView)
             userAddressTextView.text = Utils.shortenAddress(address)

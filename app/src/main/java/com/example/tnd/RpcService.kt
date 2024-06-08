@@ -4,12 +4,14 @@ import android.util.Log
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 class RpcService {
-
 
     companion object {
         private const val BASE_URL = "https://mainnet.helius-rpc.com/"
+        private const val CRYPTO_COMPARE_BASE_URL = "https://min-api.cryptocompare.com/data/"
         private const val TAG = "RpcService"
     }
 
@@ -33,48 +35,32 @@ class RpcService {
         .build()
 
     private val heliusApi = retrofit.create(HeliusApiService::class.java)
+    private val cryptoCompareRetrofit = Retrofit.Builder()
+        .baseUrl(CRYPTO_COMPARE_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
+    private val cryptoCompareApi: CryptoCompareApi = cryptoCompareRetrofit.create(CryptoCompareApi::class.java)
 
-    suspend fun getAccountInfo(pubKey: String): AccountInfoResponse? {
-        val request = AccountInfoRequest(
-            jsonrpc = "2.0",
-            id = 1,
-            method = "getAccountInfo",
-            params = listOf(pubKey, mapOf("encoding" to "base58"))
-        )
-        Log.e(TAG, request.toString())
-        try {
-            val response = heliusApi.getAccountInfo(request)
-            Log.e(TAG, response.toString())
-            if (response.isSuccessful) {
-                return response.body()
-            } else {
-                Log.e(TAG, "Error: ${response.code()} ${response.message()}")
+    fun getMoneroPrice(callback: (Double?) -> Unit) {
+        val call = cryptoCompareApi.getPrice("XMR", "USD")
+        call.enqueue(object : Callback<Map<String, Double>> {
+            override fun onResponse(call: Call<Map<String, Double>>, response: Response<Map<String, Double>>) {
+                if (response.isSuccessful) {
+                    val price = response.body()?.get("USD")
+                    callback(price)
+                } else {
+                    Log.e(TAG, "Error: ${response.code()}")
+                    callback(null)
+                }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Exception when calling getAccountInfo: ${e.message}", e)
-        }
-        return null
-    }
-    suspend fun sendTransaction(serializedTransaction: String): SendTransactionResponse? {
-        val request = SendTransactionRequest(
-            params = listOf(serializedTransaction)
-        )
-        return try {
-            val response = heliusApi.sendTransaction(request)
-            if (response.isSuccessful) {
-                Log.d(TAG, "sendTransaction Success: ${response.body()}")
-                response.body()
-            } else {
-                Log.e(TAG, "sendTransaction Error: HTTP ${response.code()} ${response.message()}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "sendTransaction Exception: ${e.message}", e)
-            null
-        }
-    }
 
+            override fun onFailure(call: Call<Map<String, Double>>, t: Throwable) {
+                Log.e(TAG, "Failed to fetch price", t)
+                callback(null)
+            }
+        })
+    }
     suspend fun getLatestBlockhash(): LatestBlockhashResponse? {
         val request = LatestBlockhashRequest(
             params = listOf(mapOf("commitment" to "processed"))
@@ -93,11 +79,6 @@ class RpcService {
             null
         }
     }
-    data class ConfigObject(
-        val mint: String,
-        val encoding: String
-    )
-
     suspend fun getTokenAccountsByOwner(pubKey: String,Mint: String): Boolean {
         val request = TokenOwnerRequest(
             jsonrpc = "2.0",
@@ -125,26 +106,6 @@ class RpcService {
         return false
     }
 
-
-    suspend fun getAssetsByOwner(ownerAddress: String, page: Int, limit: Int): AssetsByOwnerResponse? {
-        val request = AssetsByOwnerRequest(
-            method = "getAssetsByOwner",
-            params = AssetsByOwnerParams(ownerAddress, page, limit)
-        )
-        return try {
-            val response = heliusApi.getAssetsByOwner(request)
-            if (response.isSuccessful) {
-                Log.d(TAG, "getAssetsByOwner Success: ${response.body()}")
-                response.body()
-            } else {
-                Log.e(TAG, "getAssetsByOwner Error: HTTP ${response.code()} ${response.message()}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "getAssetsByOwner Exception: ${e.message}", e)
-            null
-        }
-    }
 }
 
 data class AssetRequest(
@@ -193,18 +154,4 @@ data class AssetsByOwnerResult(
     val page: Int,
     val limit: Int,
     val items: List<AssetResult>
-)
-
-data class AccountInfoContext(
-    val apiVersion: String,
-    val slot: Long
-)
-
-data class AccountInfoValue(
-    val data: List<String>,
-    val executable: Boolean,
-    val lamports: Long,
-    val owner: String,
-    val rentEpoch: Long,
-    val space: Int
 )

@@ -35,6 +35,7 @@ class InvoiceActivity : Activity() {
     private lateinit var techListsArray: Array<Array<String>>
     private lateinit var myAddressButton: Button
     private var userAddress: String? = null
+    private var connectedNetwork: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +48,7 @@ class InvoiceActivity : Activity() {
         textViewUSDCAmount = findViewById(R.id.textViewDollarAmount)
 
         userAddress = intent.getStringExtra("USER_ADDRESS")
+        connectedNetwork = intent.getStringExtra("CONNECTED_NETWORK")
         myAddressButton.isEnabled = editTextAddress.text.isEmpty()
 
         myAddressButton.setOnClickListener {
@@ -78,7 +80,15 @@ class InvoiceActivity : Activity() {
         })
 
         // Set up the token spinner
-        val tokenAdapter = TokenAdapter(this, TokenData.tokenList_xmr)
+
+        val tokenAdapter = if (connectedNetwork == "Solana") {
+            TokenAdapter(this, TokenData.tokenList)
+        } else if (connectedNetwork == "XMR") {
+            TokenAdapter(this, TokenData.tokenList_xmr)
+        } else {
+            // Handle other cases or provide a default
+            TokenAdapter(this, TokenData.tokenList_xmr)
+        }
         spinnerToken.adapter = tokenAdapter
 
 
@@ -87,7 +97,7 @@ class InvoiceActivity : Activity() {
                 val selectedToken = parent.getItemAtPosition(position) as TokenData.TokenItem
                 // Handle the selected token
                 Log.d("InvoiceActivity", "Selected Token: ${selectedToken.name}")
-                Utils.getTokenPriceInDollars(selectedToken) { price ->
+                getPrice(selectedToken) { price ->
                     if (price != null) {
                         // Update UI with the fetched price
                         Log.d("InvoiceActivity", "Price of ${selectedToken.name} is $price USD")
@@ -97,10 +107,12 @@ class InvoiceActivity : Activity() {
                     }
                 }
             }
+
             override fun onNothingSelected(parent: AdapterView<*>) {
                 // Optional: handle no selection
             }
         }
+
 
         val buttonSend: Button = findViewById(R.id.buttonSend)
 
@@ -206,6 +218,23 @@ class InvoiceActivity : Activity() {
             return view
         }
     }
+    private fun getPrice(selectedToken: TokenData.TokenItem, callback: (Double?) -> Unit) {
+        when (connectedNetwork) {
+            "Solana" -> {
+                SolanaUtils.getTokenPriceInDollars(selectedToken) { price ->
+                    callback(price)
+                }
+            }
+            "XMR" -> {
+                XMRUtils.getXMRPriceInUSD { price ->
+                    callback(price)
+                }
+            }
+            else -> callback(null)
+        }
+    }
+
+
     private fun setupAmountWatcher() {
         editTextAmount.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -224,7 +253,7 @@ class InvoiceActivity : Activity() {
             val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
 
             if (amount != null) {
-                Utils.getTokenPriceInDollars(selectedToken) { price ->
+                getPrice(selectedToken) { price ->
                     price?.let {
                         val totalInDollars = amount * it
                         runOnUiThread {
@@ -239,4 +268,5 @@ class InvoiceActivity : Activity() {
             textViewUSDCAmount.text = ""
         }
     }
+
 }

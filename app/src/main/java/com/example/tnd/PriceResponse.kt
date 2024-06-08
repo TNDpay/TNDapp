@@ -11,3 +11,4 @@ data class TokenInfo(
     val vsTokenSymbol: String,
     val price: Double
 )
+
