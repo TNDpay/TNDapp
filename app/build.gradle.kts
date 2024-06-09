@@ -7,17 +7,21 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
+
 // Load local.properties
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
+
+
 android {
     namespace = "com.example.tnd"
     compileSdk = 33
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     defaultConfig {
@@ -28,12 +32,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val ironForgeApiKey = localProperties["IronForge_API_KEY"] as? String
-        if (ironForgeApiKey != null) {
-            buildConfigField("String", "IRONFORGE_API_KEY", "\"$ironForgeApiKey\"")
-        } else {
-            throw GradleException("IronForge API Key not found in local.properties")
-        }
     }
 
     buildTypes {
@@ -45,15 +43,14 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
-    }
-    buildFeatures {
-        viewBinding = true
     }
 }
 

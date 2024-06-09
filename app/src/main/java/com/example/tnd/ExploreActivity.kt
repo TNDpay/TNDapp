@@ -75,7 +75,6 @@ class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
                 val request = Request.Builder()
                     .url("https://raw.githubusercontent.com/TNDpay/vendors/main/vendors.json")
                     .build()
-
                 val response = client.newCall(request).execute()
                 val responseData = response.body?.string()
                 Log.d("ExploreActivity", "Response Data: $responseData")
@@ -125,8 +124,6 @@ class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST_CODE)
         }
-
-
     }
 
 }
