@@ -82,12 +82,12 @@ class InvoiceActivity : Activity() {
         // Set up the token spinner
 
         val tokenAdapter = if (connectedNetwork == "Solana") {
-            TokenAdapter(this, TokenData.tokenList)
+            TokenAdapter(this, TokenData.tokenList_sol)
         } else if (connectedNetwork == "XMR") {
             TokenAdapter(this, TokenData.tokenList_xmr)
         } else {
             // Handle other cases or provide a default
-            TokenAdapter(this, TokenData.tokenList_xmr)
+            TokenAdapter(this, TokenData.tokenList_sol)
         }
         spinnerToken.adapter = tokenAdapter
 
@@ -219,11 +219,14 @@ class InvoiceActivity : Activity() {
         }
     }
     private fun getPrice(selectedToken: TokenData.TokenItem, callback: (Double?) -> Unit) {
+        Log.d("InvoiceActivity","Connected Networkis :${connectedNetwork}")
         when (connectedNetwork) {
             "Solana" -> {
                 SolanaUtils.getTokenPriceInDollars(selectedToken) { price ->
                     callback(price)
                 }
+                Log.d("InvoiceActivity", "Using solana")
+
             }
             "XMR" -> {
                 XMRUtils.getXMRPriceInUSD { price ->

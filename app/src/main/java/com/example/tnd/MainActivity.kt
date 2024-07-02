@@ -43,19 +43,12 @@
     import retrofit2.Retrofit
     import retrofit2.converter.gson.GsonConverterFactory
     import kotlin.math.pow
-    import androidx.browser.customtabs.CustomTabsIntent
-    import androidx.browser.customtabs.CustomTabColorSchemeParams
     import android.widget.Toast
     import android.app.AlertDialog
     import android.icu.math.BigDecimal
-    import okhttp3.OkHttpClient
-    import okhttp3.Request
-    import com.google.gson.Gson
-    import com.google.gson.JsonObject
     import io.metamask.androidsdk.Ethereum
     import io.metamask.androidsdk.Dapp
     import io.metamask.androidsdk.RequestError
-    import android.widget.LinearLayout
     import io.metamask.androidsdk.*
     import org.web3j.utils.Numeric
     import java.math.BigInteger
@@ -145,6 +138,7 @@
                 // Start InvoiceActivity when the charge button is clicked
                 val intent = Intent(this@MainActivity, InvoiceActivity::class.java)
                 intent.putExtra("USER_ADDRESS", userAddress)
+                intent.putExtra("CONNECTED_NETWORK", connectedNetwork)
                 startActivity(intent)
             }
             val exploreBoutton: Button = findViewById(R.id.exploreButton)
@@ -175,8 +169,8 @@
                                                 Log.d("MainActivity", "DIFFERENT ID S ")
                                                 // If user have chosen other token we have to swap
                                                 // Find the selected token to get the number of decimals and mint address
-                                                val tokenIn = TokenData.tokenList.find { it.id == idSpinner }
-                                                val tokenOut = TokenData.tokenList.find { it.id == id }
+                                                val tokenIn = TokenData.tokenList_sol.find { it.id == idSpinner }
+                                                val tokenOut = TokenData.tokenList_sol.find { it.id == id }
                                                 // Perform the conversion only if both tokens are found
                                                 if (tokenIn != null && tokenOut != null) {
                                                     // Convert the amount from Double to Long based on the token's decimals
@@ -268,10 +262,14 @@
             declineButton.setOnClickListener {
                 decline()
             }
-            val tokenAdapter = if (connectedNetwork == "Polygon") {
-                TokenAdapter(this, TokenData.tokenList)
+
+            val tokenAdapter = if (connectedNetwork == "Solana") {
+                TokenAdapter(this, TokenData.tokenList_sol)
+            } else if (connectedNetwork == "XMR") {
+                TokenAdapter(this, TokenData.tokenList_xmr)
             } else {
-                TokenAdapter(this, TokenData.tokenList_polygon)
+                // Handle other cases or provide a default
+                TokenAdapter(this, TokenData.tokenList_sol)
             }
             spinnerToken.adapter = tokenAdapter
 
@@ -500,7 +498,7 @@
         private fun updateTokenList(context: Context, connectedNetwork:String) {
             Log.d("MainActivity",connectedNetwork)
             val tokenAdapter = if (connectedNetwork == "Solana") {
-                TokenAdapter(context, TokenData.tokenList)
+                TokenAdapter(context, TokenData.tokenList_sol)
             } else {
                 TokenAdapter(context, TokenData.tokenList_polygon)
             }
@@ -825,7 +823,6 @@
         override fun onTagDiscovered(tag: Tag?) {
             tag?.let {
                 val isoDep = IsoDep.get(it)
-                val tokens = TokenData.tokenList
                 isoDep.connect()
                 val response = isoDep.transceive(Utils.hexStringToByteArray("00A4040007A0000002471001"))
                 val responseString = String(response, Charsets.UTF_8)
@@ -835,7 +832,6 @@
                     paymentAddress = paymentInfo[0]
                     paymentAmount = paymentInfo[1].toDoubleOrNull()
                     tokenId = paymentInfo[2].toIntOrNull()
-                    val token = tokens.find { it.id == tokenId }
                     Log.d("MainActivity", "HCE message: $responseString")
                     runOnUiThread {
                         // Set the text for payment address and amount
@@ -869,7 +865,7 @@
         ) {
             scope.launch {
                 withContext(Dispatchers.IO) {
-                    val token = TokenData.tokenList.find { it.id == id }
+                    val token = TokenData.tokenList_sol.find { it.id == id }
                     if (token == null) {
                         Log.e("MainActivity", "Token with ID $id not found.")
                         return@withContext // Exit the function if token is not found
