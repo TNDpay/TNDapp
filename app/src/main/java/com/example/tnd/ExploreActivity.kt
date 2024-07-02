@@ -1,33 +1,31 @@
 package com.example.tnd
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.content.pm.PackageManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.Manifest
-import android.location.Location
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import android.preference.PreferenceManager
+import android.util.Log
 import com.example.tnd.databinding.ActivityExploreBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import android.util.Log
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 
+class ExploreActivity : AppCompatActivity() {
 
-class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
-
-    private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityExploreBinding
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var map: MapView
+
     companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 1
     }
@@ -35,40 +33,83 @@ class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
+
         binding = ActivityExploreBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        map = binding.map
+        map.setTileSource(TileSourceFactory.MAPNIK)
+        map.setMultiTouchControls(true)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        val mapController = map.controller
+        mapController.setZoom(15.0)
+
+        checkLocationPermission()
+        fetchLocationsAndUpdateMap()
     }
 
-    // Handle the permission result
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+        } else {
+            enableMyLocation()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission was granted. Do the location-related task you need to do.
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    mMap.isMyLocationEnabled = true
-                    mMap.uiSettings.isMyLocationButtonEnabled = true
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST_CODE -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    enableMyLocation()
+                } else {
+                    // Permission denied, handle accordingly (e.g., show a message to the user)
                 }
-            } else {
-                // Permission denied, Disable the functionality that depends on this permission.
-                // You can show an explanation to the user, etc.
+                return
             }
         }
     }
+
+    private fun enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Create and add the location overlay
+            val myLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map)
+            myLocationOverlay.enableMyLocation()
+            myLocationOverlay.enableFollowLocation()
+            map.overlays.add(myLocationOverlay)
+
+            // Zoom to the user's location
+            val locationManager = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
+            val lastKnownLocation = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+
+            lastKnownLocation?.let {
+                val userLocation = GeoPoint(it.latitude, it.longitude)
+                map.controller.setCenter(userLocation)
+            } ?: run {
+                val defaultLocation = GeoPoint(40.359094404842565, 0.3996138427450273)
+                map.controller.setCenter(defaultLocation)
+            }
+
+            map.controller.setZoom(15.0)
+            map.invalidate() // Refresh the map
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+
     data class LocationItem(
         val name: String,
         val latitude: Double,
         val longitude: Double
     )
+
     private fun fetchLocationsAndUpdateMap() {
-        // Run network operations on a background thread
         Thread {
             try {
                 val client = OkHttpClient()
@@ -78,52 +119,36 @@ class ExploreActivity : AppCompatActivity(), OnMapReadyCallback {
                 val response = client.newCall(request).execute()
                 val responseData = response.body?.string()
                 Log.d("ExploreActivity", "Response Data: $responseData")
-                // Parse JSON to a list of LocationItem
+
                 val gson = Gson()
                 val locationListType = object : TypeToken<List<LocationItem>>() {}.type
-                val locations: List<LocationItem> = gson.fromJson(responseData, locationListType)
+                val locations: List<LocationItem?> = gson.fromJson(responseData, locationListType)
 
-                // Update the map with the fetched locations
                 runOnUiThread {
-                    locations?.forEach { location ->
-                        location?.let {
-                            val latLng = LatLng(it.latitude, it.longitude)
-                            mMap.addMarker(MarkerOptions().position(latLng).title(it.name))
-                            Log.d("ExploreActivity", "Location added: ${it.name} at $latLng")
-                        }
+                    locations.filterNotNull().forEach { location ->
+                        val marker = Marker(map)
+                        marker.position = GeoPoint(location.latitude, location.longitude)
+                        marker.title = location.name
+                        map.overlays.add(marker)
+                        Log.d("ExploreActivity", "Location added: ${location.name} at ${marker.position}")
                     }
+                    map.invalidate()
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("ExploreActivity", "Error fetching locations: ${e.message}")
-
             }
         }.start()
     }
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        fetchLocationsAndUpdateMap()
-        // Check for location permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
-            mMap.isMyLocationEnabled = true
-            mMap.uiSettings.isMyLocationButtonEnabled = true
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                // Got last known location. In some rare situations, this can be null.
-                location?.let {
-                    val userLocation = LatLng(it.latitude, it.longitude)
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15f))
-                } ?: run {
-                    val lastLocation = LatLng(40.359094404842565, 0.3996138427450273)
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f))
-                }
-            }
-        } else {
-            // Request location permission, so that we can get the location of the device
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE)
-        }
+
+    override fun onResume() {
+        super.onResume()
+        map.onResume()
     }
 
+    override fun onPause() {
+        super.onPause()
+        map.onPause()
+    }
 }

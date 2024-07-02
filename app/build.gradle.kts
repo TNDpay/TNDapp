@@ -15,7 +15,6 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
-
 android {
     namespace = "com.example.tnd"
     compileSdk = 33
@@ -32,6 +31,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val ironForgeApiKey = localProperties["IronForge_API_KEY"] as? String
+        if (ironForgeApiKey != null) {
+            buildConfigField("String", "IRONFORGE_API_KEY", "\"$ironForgeApiKey\"")
+        } else {
+            throw GradleException("IronForge API Key not found in local.properties")
+        }
     }
 
     buildTypes {
@@ -55,9 +60,9 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-maps:18.1.0")
+
     val hilt_version = "2.43.2"
-    implementation("io.metamask.androidsdk:metamask-android-sdk:0.1.2")
+    //implementation("io.metamask.androidsdk:metamask-android-sdk:0.1.2")
 
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
@@ -98,7 +103,12 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
 
     //MAP
-    implementation("com.google.android.gms:play-services-location:21.2.0")
+    //implementation("com.google.android.gms:play-services-location:21.2.0")
+    //implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.14")
+    implementation("org.osmdroid:osmdroid-wms:6.1.14")
+    implementation("org.osmdroid:osmdroid-mapsforge:6.1.14")
+    implementation("org.osmdroid:osmdroid-geopackage:6.1.14")
 
     //EVM (Metamask)
     implementation("io.metamask.androidsdk:metamask-android-sdk:0.2.1")
@@ -108,6 +118,5 @@ dependencies {
     implementation("org.web3j:crypto:4.8.7"){
         exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
     }
-    //idk
-    implementation("androidx.appcompat:appcompat:1.4.0")
+
 }

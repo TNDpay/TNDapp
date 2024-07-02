@@ -43,9 +43,31 @@
     import retrofit2.Retrofit
     import retrofit2.converter.gson.GsonConverterFactory
     import kotlin.math.pow
+    import androidx.browser.customtabs.CustomTabsIntent
+    import androidx.browser.customtabs.CustomTabColorSchemeParams
     import android.widget.Toast
     import android.app.AlertDialog
+    import android.icu.math.BigDecimal
+    import okhttp3.OkHttpClient
+    import okhttp3.Request
+    import com.google.gson.Gson
+    import com.google.gson.JsonObject
     import io.metamask.androidsdk.Ethereum
+    import io.metamask.androidsdk.Dapp
+    import io.metamask.androidsdk.RequestError
+    import android.widget.LinearLayout
+    import io.metamask.androidsdk.*
+    import org.web3j.utils.Numeric
+    import java.math.BigInteger
+    import org.web3j.protocol.Web3j
+    import org.web3j.protocol.http.HttpService
+    import org.web3j.abi.datatypes.Function
+    import org.web3j.abi.FunctionEncoder
+    import org.web3j.abi.TypeReference
+    import org.web3j.abi.datatypes.Address
+    import org.web3j.abi.datatypes.generated.Uint256
+    import org.web3j.abi.datatypes.generated.Uint8
+    import org.web3j.protocol.core.DefaultBlockParameterName
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -69,6 +91,9 @@
         private lateinit var addressTextView: TextView
         private lateinit var cardLayout: View
         private var connectedNetwork: String = ""
+        private lateinit var ethereum: Ethereum
+
+
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -120,7 +145,6 @@
                 // Start InvoiceActivity when the charge button is clicked
                 val intent = Intent(this@MainActivity, InvoiceActivity::class.java)
                 intent.putExtra("USER_ADDRESS", userAddress)
-                intent.putExtra("CONNECTED_NETWORK", connectedNetwork)
                 startActivity(intent)
             }
             val exploreBoutton: Button = findViewById(R.id.exploreButton)
@@ -166,21 +190,16 @@
                                             Log.e("MainActivity", "Cannot make payment: No user address or can't transact.")
                                         }
                                     }
-                                    "XMR" -> {
+                                    "Polygon" -> {
                                         CoroutineScope(Dispatchers.Main).launch {
-                                            val uri = Uri.parse("monero:$address?tx_amount=$amount")
-                                            val intent = Intent(Intent.ACTION_VIEW, uri)
-
-                                            // Verify that there is an app available to handle the Intent
-                                            if (intent.resolveActivity(this@MainActivity.packageManager) != null) {
-                                                this@MainActivity.startActivity(intent)
-                                            } else {
-                                                // Handle the case where no app can handle the Intent
-                                                // For example, show a Toast or a dialog
-                                                Toast.makeText(this@MainActivity, "No application found to handle Monero deeplink", Toast.LENGTH_LONG).show()
+                                            try {
+                                                payWMM(amount, address)
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
                                             }
                                         }
                                     }
+
                                     else -> {
                                         Log.e("MainActivity", "ERROR")
                                     }
@@ -478,17 +497,15 @@
             // Add logic to check if the token is still valid (if possible)
             return authToken != null // and isValid(authToken)
         }
-        private fun updateTokenList(context: Context, connectedNetwork: String) {
-            Log.d("MainActivity", connectedNetwork)
-            val tokenAdapter = when (connectedNetwork) {
-                "Solana" -> TokenAdapter(context, TokenData.tokenList)
-                "Polygon" -> TokenAdapter(context, TokenData.tokenList_polygon)
-                "XMR" -> TokenAdapter(context, TokenData.tokenList_xmr)
-                else -> TokenAdapter(context, TokenData.tokenList_polygon)
+        private fun updateTokenList(context: Context, connectedNetwork:String) {
+            Log.d("MainActivity",connectedNetwork)
+            val tokenAdapter = if (connectedNetwork == "Solana") {
+                TokenAdapter(context, TokenData.tokenList)
+            } else {
+                TokenAdapter(context, TokenData.tokenList_polygon)
             }
             spinnerToken.adapter = tokenAdapter
         }
-
         private fun updateUserAddressUI(address: String) {
             val userAddressTextView: TextView = findViewById(R.id.userAddressTextView)
             userAddressTextView.text = Utils.shortenAddress(address)
@@ -512,38 +529,21 @@
 
         private fun connectWallet() {
             // Create an AlertDialog to prompt the user to choose the wallet type
-            val walletOptions = arrayOf("Monero", "Solana")
-            AlertDialog.Builder(this)
-                .setTitle("Select Wallet Type")
-                .setItems(walletOptions) { _, which ->
-                    when (which) {
-                        0 -> connectCakeWallet(this@MainActivity)
-                        1 -> connectSolanaWallet()
-                    }
-                }
-                .show()
+            connectSolanaWallet()
+            //TODO: Use walletconnect instead of MetaMask api
+
+            //val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
+            //AlertDialog.Builder(this)
+            //    .setTitle("Select Wallet Type")
+            //    .setItems(walletOptions) { _, which ->
+            //        when (which) {
+            //            0 -> connectSolanaWallet()
+            //            1 -> showMetaMaskWarningDialog()
+            //        }
+            //    }
+            //    .show()
         }
-        fun connectCakeWallet(context: Context) {
-            // Save the values from the successful result
-            userAddress = "Monero"
-            authToken = ""
-            canTransact = true
-            // After successful wallet connection
-            storeAuthData(authToken, userAddress)
-            // Log the result and update UI on the main thread
-            Log.d("MainActivity", "Connected to XMR Wallet: $userAddress")
-            connectedNetwork = "XMR"
-            UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
-            runOnUiThread {
-                connectWalletButton.visibility = View.GONE
-                updateButton() // Update the connect button text
-                updateUserAddressUI(userAddress)
-                cardLayout.visibility = View.VISIBLE
-                updateTokenList(this@MainActivity,connectedNetwork)
-            }
-            val navigationView: NavigationView = findViewById(R.id.nav_view)
-            updateMenuItemsVisibility(navigationView)
-        }
+
         private fun connectSolanaWallet() {
             scope.launch {
                 try {
@@ -614,6 +614,144 @@
             }
         }
 
+        private fun connectMetaMask() {
+            ethereum = Ethereum(context = this)
+
+            val dapp = Dapp("TND Pay", "https://www.tndpayments.com/")
+
+            // This is the same as calling eth_requestAccounts
+            ethereum.connect(dapp) { result ->
+                if (result is RequestError) {
+                    Log.e("MainActivity", "MetaMask connection error: ${result.message}")
+                    runOnUiThread {
+                        // Update the UI to show an error message
+                    }
+                } else {
+                    Log.d("MainActivity", "MetaMask connection result: $result")
+                    // Parse the result to get the user's Ethereum address
+                    val ethereumAddress = result.toString()
+
+
+                    connectedNetwork = "Polygon"
+                    UIUtils.updateCardUI(this, ethereumAddress, connectedNetwork)
+
+                    // Update the UI to reflect the connected state
+                    runOnUiThread {
+                        connectWalletButton.visibility = View.GONE
+                        updateButton()
+                        updateUserAddressUI(ethereumAddress)
+                        cardLayout.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
+        private suspend fun getBridgingCost():String {
+            return withContext(Dispatchers.IO) {
+                // Connect to an Ethereum node (like Infura)
+                val api =BuildConfig.INFURA
+                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/$api"))
+                val destinationChainId = "4"
+                val messenger = "1"
+                val token = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+                // Smart contract address
+                val contractAddress = "0x7775d63836987f444E2F14AA0fA2602204D7D3E0"
+
+                // Load the smart contract
+                val function = Function(
+                    "getBridgingCostInTokens",
+                    listOf(Uint256(BigInteger(destinationChainId, 16)), Uint8(messenger.toBigInteger()), Address(token)),
+                    listOf(object : TypeReference<Uint256>() {})
+                )
+                val encodedFunction = FunctionEncoder.encode(function)
+                // Call the smart contract function
+                val ethCall = web3.ethCall(
+                    org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(
+                        null,
+                        contractAddress,
+                        encodedFunction
+                    ),
+                    DefaultBlockParameterName.LATEST
+                ).send()
+
+                val result = ethCall.value
+                Log.d(TAG, "Raw result: $result")
+
+                return@withContext if (result != null) {
+                    Log.d(TAG, "Bridging Cost (hex): $result")
+                    result
+                } else {
+                    Log.e(TAG, "Failed to get bridging cost")
+                    "0"
+                }
+            }
+        }
+        private suspend fun payWMM(raw_amount: Double, solanaAddress: String)  {
+            val from = ethereum.selectedAddress
+            val to = "0x7775d63836987f444e2f14aa0fa2602204d7d3e0"
+            val methodId = "0x4cd480bd"
+            val token = "0x0000000000000000000000003c499c542cef5e3811e1192ce70d8cc03d5c3359"
+            val destinationChainId = "0000000000000000000000000000000000000000000000000000000000000004"
+            val receiveToken = "c6fa7af3bedbad3a3d65f36aabc97431b1bbe4c2d2f6e0e47ca60203452f5d61"
+            val nonce = "0"
+            val messenger = "0000000000000000000000000000000000000000000000000000000000000001"
+
+            fun solanaAddressToHex(solanaAddress: String): String {
+                val publicKeyBytes = Base58.decode(solanaAddress)
+                val lastBytes = publicKeyBytes.takeLast(32)
+                return lastBytes.joinToString("") { "%02x".format(it) }
+            }
+
+
+            val amount = BigDecimal(raw_amount).toBigInteger().toString(16).padStart(64, '0')
+
+            //val feeTokenAmount = getBridgingCost()
+            val encodedFeeTokenAmount = getBridgingCost() //feeTokenAmount.toString(16).padStart(64, '0')
+            Log.e(TAG, "GOT bridging cost $encodedFeeTokenAmount")
+            val recipient = solanaAddressToHex(solanaAddress)
+
+            // Encode the function parameters
+            val encodedToken = Numeric.toHexString(Numeric.hexStringToByteArray(token))
+            val encodedAmount = Numeric.toHexString(BigInteger(amount, 16).toByteArray())
+            val encodedRecipient = Numeric.toHexString(Numeric.hexStringToByteArray(recipient))
+            val encodedDestinationChainId = Numeric.toHexString(BigInteger(destinationChainId, 16).toByteArray())
+            val encodedReceiveToken = Numeric.toHexString(Numeric.hexStringToByteArray(receiveToken))
+            val encodedNonce = Numeric.toHexString(BigInteger(nonce, 16).toByteArray())
+            val encodedMessenger = Numeric.toHexString(BigInteger(messenger, 16).toByteArray())
+
+            // Concatenate the method ID and encoded parameters
+            val data = methodId +
+                    encodedToken.substring(2).padStart(64, '0') +
+                    encodedAmount.substring(2).padStart(64, '0') +
+                    encodedRecipient.substring(2).padStart(64, '0') +
+                    encodedDestinationChainId.substring(2).padStart(64, '0') +
+                    encodedReceiveToken.substring(2).padStart(64, '0') +
+                    encodedNonce.substring(2).padStart(64, '0') +
+                    encodedMessenger.substring(2).padStart(64, '0') +
+                    encodedFeeTokenAmount.substring(2).padStart(64, '0')
+
+            val params: Map<String, Any> = mapOf(
+                "from" to from,
+                "to" to to,
+                "gas" to "0x7a120", // Adjust the gas limit as needed
+                "value" to "0x0", // Set the value to 0 if not sending Ether
+                "data" to data
+            )
+
+            // Create request
+            val transactionRequest = EthereumRequest(
+                method = EthereumMethod.ETH_SEND_TRANSACTION.value,
+                params = listOf(params)
+            )
+
+            ethereum.sendRequest(transactionRequest) { result ->
+                if (result is RequestError) {
+                    // handle error
+                } else {
+                    Log.d(TAG, "Ethereum transaction result: $result")
+                    Utils.openWebPage(this,"https://polygonscan.com/tx/$result")
+                }
+            }
+        }
         companion object {
             private const val TAG = "MainActivity"
         }
