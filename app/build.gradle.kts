@@ -17,18 +17,19 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.example.tnd"
-    compileSdk = 33
+    compileSdk = 34
     buildFeatures {
         buildConfig = true
         viewBinding = true
     }
 
     defaultConfig {
-        applicationId = "com.example.tnd"
+        applicationId = "com.tnd.tnd"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        resConfigs("en")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val ironForgeApiKey = localProperties["IronForge_API_KEY"] as? String

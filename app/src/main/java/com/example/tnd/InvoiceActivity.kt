@@ -18,7 +18,8 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.util.Log
-
+import android.nfc.NfcEvent
+import android.nfc.tech.Ndef
 
 
 
@@ -117,31 +118,14 @@ class InvoiceActivity : Activity() {
         val buttonSend: Button = findViewById(R.id.buttonSend)
 
         buttonSend.setOnClickListener {
-            // Check if NFC is available and enabled
-            if (nfcAdapter == null || !nfcAdapter.isEnabled) {
+            if (nfcAdapter?.isEnabled == true) {
+                prepareAndStoreNfcData()
+                Toast.makeText(this, "Ready to send via NFC. Tap devices together.", Toast.LENGTH_LONG).show()
+            } else {
                 Toast.makeText(this, "NFC is not available or not enabled", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
             }
-            val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
-            Log.d("InvoiceActivity", "Selected Token ID: ${selectedToken.id}")
-            val sharedPref = getSharedPreferences("NFC_DATA", MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("address", editTextAddress.text.toString())
-                putString("amount", editTextAmount.text.toString())
-                putString("id", selectedToken.id.toString())
-                apply()
-            }
-
-            // Your logic to create an NdefMessage goes here
-            val messageToSend = NdefMessage(
-                arrayOf(
-                    NdefRecord.createTextRecord(null, "${editTextAddress.text}\n${editTextAmount.text}\n${selectedToken.id}")
-                )
-            )
-
-            nfcAdapter.setNdefPushMessage(messageToSend, this)
-            Toast.makeText(this, "Ready to send message via NFC", Toast.LENGTH_LONG).show()
         }
+
 
 
         // Check for available NFC Adapter
@@ -269,6 +253,18 @@ class InvoiceActivity : Activity() {
             }
         } else {
             textViewUSDCAmount.text = ""
+        }
+    }
+    private fun prepareAndStoreNfcData() {
+        val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
+        val address = editTextAddress.text.toString()
+        val amount = editTextAmount.text.toString()
+
+        getSharedPreferences("NFC_DATA", MODE_PRIVATE).edit().apply {
+            putString("address", address)
+            putString("amount", amount)
+            putString("id", selectedToken.id.toString())
+            apply()
         }
     }
 

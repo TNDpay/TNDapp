@@ -49,7 +49,6 @@ class MyHostApduService : HostApduService() {
 
     companion object {
         // This is the AID (Application Identifier) for the service.
-        // It s unique and registered with the NFC system on the device.
         private const val AID = "A0000002471001"
     }
 }

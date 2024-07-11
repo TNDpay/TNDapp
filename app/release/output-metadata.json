@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.tnd",
+  "applicationId": "com.tnd.tnd",
   "variantName": "release",
   "elements": [
     {
