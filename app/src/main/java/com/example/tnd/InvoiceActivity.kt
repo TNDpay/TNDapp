@@ -91,6 +91,7 @@ class InvoiceActivity : Activity() {
             TokenAdapter(this, TokenData.tokenList_sol)
         }
         spinnerToken.adapter = tokenAdapter
+        updateDollarAmount()
 
 
         spinnerToken.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -98,6 +99,7 @@ class InvoiceActivity : Activity() {
                 val selectedToken = parent.getItemAtPosition(position) as TokenData.TokenItem
                 // Handle the selected token
                 Log.d("InvoiceActivity", "Selected Token: ${selectedToken.name}")
+                updateDollarAmount()
                 getPrice(selectedToken) { price ->
                     if (price != null) {
                         // Update UI with the fetched price
@@ -233,26 +235,25 @@ class InvoiceActivity : Activity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
     }
+
     private fun updateDollarAmount() {
         val amountString = editTextAmount.text.toString()
-        if (amountString.isNotEmpty()) {
-            val amount = amountString.toDoubleOrNull()
-            val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
+        val amount = amountString.toDoubleOrNull() ?: 0.0 // Use 0.0 if amount is empty or invalid
+        val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
 
-            if (amount != null) {
-                getPrice(selectedToken) { price ->
-                    price?.let {
-                        val totalInDollars = amount * it
-                        runOnUiThread {
-                            textViewUSDCAmount.text = "$${String.format("%.2f", totalInDollars)}"
-                        }
-                    } ?: runOnUiThread {
-                        textViewUSDCAmount.text = "Price unavailable"
+        getPrice(selectedToken) { price ->
+            price?.let {
+                val totalInDollars = amount * it
+                runOnUiThread {
+                    textViewUSDCAmount.text = if (amount > 0) {
+                        "$${String.format("%.2f", totalInDollars)}"
+                    } else {
+                        "$0.00" // Show $0.00 if amount is 0 or empty
                     }
                 }
+            } ?: runOnUiThread {
+                textViewUSDCAmount.text = "Price unavailable"
             }
-        } else {
-            textViewUSDCAmount.text = ""
         }
     }
     private fun prepareAndStoreNfcData() {
