@@ -117,10 +117,11 @@
                 connectWalletButton.visibility = View.VISIBLE
                 cardLayout.visibility = View.GONE
             }
-            val (retrievedAuthToken, retrievedUserAddress) = retrieveAuthData()
+            val (retrievedAuthToken, retrievedUserAddress,retrievedNetwork) = retrieveAuthData()
             if (retrievedAuthToken != null && retrievedUserAddress != null) {
                 this.authToken = retrievedAuthToken
                 this.userAddress = retrievedUserAddress
+                this.connectedNetwork = retrievedNetwork ?: ""
                 canTransact = true
                 updateUserAddressUI(retrievedUserAddress)
 
@@ -195,7 +196,7 @@
                                     }
 
                                     else -> {
-                                        Log.e("MainActivity", "ERROR")
+                                        Log.e("MainActivity", "ERROR because connected network value rn is ${connectedNetwork}")
                                     }
                                 }
                             } ?: run {
@@ -508,20 +509,22 @@
             val userAddressTextView: TextView = findViewById(R.id.userAddressTextView)
             userAddressTextView.text = Utils.shortenAddress(address)
         }
-        private fun storeAuthData(authToken: String, userAddress: String) {
+        private fun storeAuthData(authToken: String, userAddress: String, network: String) {
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
             with(sharedPreferences.edit()) {
                 putString("auth_token", authToken)
                 putString("user_address", userAddress)
+                putString("connected_network", network)
                 apply()
             }
         }
 
-        private fun retrieveAuthData(): Pair<String?, String?> {
+        private fun retrieveAuthData(): Triple<String?, String?, String?> {
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
             val authToken = sharedPreferences.getString("auth_token", null)
             val userAddress = sharedPreferences.getString("user_address", null)
-            return Pair(authToken, userAddress)
+            val connectedNetwork = sharedPreferences.getString("connected_network", null)
+            return Triple(authToken, userAddress,connectedNetwork)
         }
 
 
@@ -561,11 +564,11 @@
                             userAddress = PublicKey(result.payload.publicKey).toBase58()
                             authToken = result.payload.authToken
                             canTransact = true
-                            // After successful wallet connection
-                            storeAuthData(authToken, userAddress)
                             // Log the result and update UI on the main thread
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
                             connectedNetwork = "Solana"
+                            // After successful wallet connection
+                            storeAuthData(authToken, userAddress, connectedNetwork)
                             UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
                             runOnUiThread {
                                 connectWalletButton.visibility = View.GONE
@@ -760,6 +763,7 @@
             with(sharedPreferences.edit()) {
                 remove("auth_token")
                 remove("user_address")
+                remove("connectedNetwork")
                 apply()
             }
 
