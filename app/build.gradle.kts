@@ -23,6 +23,13 @@ android {
         viewBinding = true
     }
 
+    packagingOptions {
+        resources {
+            excludes.add("META-INF/INDEX.LIST")
+            excludes.add("META-INF/DEPENDENCIES")
+            pickFirsts.add("META-INF/*")
+        }
+    }
     defaultConfig {
         applicationId = "com.tnd.tnd"
         minSdk = 28
@@ -58,6 +65,7 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
 }
 
 dependencies {
@@ -82,9 +90,9 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.3.1")
 
     //MWA
-    implementation("com.solanamobile:mobile-wallet-adapter-clientlib-ktx:1.1.0")
+    implementation("com.solanamobile:mobile-wallet-adapter-clientlib-ktx:2.0.3")
     implementation("com.portto.solana:web3:0.1.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0") // Use the latest version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     implementation("org.bitcoinj:bitcoinj-core:0.16.2")
 
@@ -104,8 +112,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
 
     //MAP
-    //implementation("com.google.android.gms:play-services-location:21.2.0")
-    //implementation("com.google.android.gms:play-services-maps:18.1.0")
     implementation("org.osmdroid:osmdroid-android:6.1.14")
     implementation("org.osmdroid:osmdroid-wms:6.1.14")
     implementation("org.osmdroid:osmdroid-mapsforge:6.1.14")

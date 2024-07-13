@@ -61,6 +61,9 @@
     import org.web3j.abi.datatypes.generated.Uint256
     import org.web3j.abi.datatypes.generated.Uint8
     import org.web3j.protocol.core.DefaultBlockParameterName
+    import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
+    import com.solana.mobilewalletadapter.clientlib.RpcCluster
+    import com.solana.mobilewalletadapter.clientlib.Blockchain
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -77,6 +80,7 @@
         private val scope = CoroutineScope(Job() + Dispatchers.Main)
         private lateinit var activityResultSender: ActivityResultSender
         private lateinit var identityUri: Uri
+        private var chain = ""
         private lateinit var iconUri: Uri
         private lateinit var identityName: String
         private lateinit var authToken: String
@@ -85,6 +89,8 @@
         private lateinit var cardLayout: View
         private var connectedNetwork: String = ""
         private lateinit var ethereum: Ethereum
+        private lateinit var walletAdapter: MobileWalletAdapter
+        private lateinit var connectionIdentity: ConnectionIdentity
 
 
 
@@ -109,6 +115,11 @@
             addressTextView = findViewById(R.id.addressTextView)
             cardLayout = findViewById(R.id.cardLayout)
 
+
+            // Initialize ConnectionIdentity
+            connectionIdentity = ConnectionIdentity(identityUri,iconUri,identityName)
+            walletAdapter = MobileWalletAdapter(connectionIdentity)
+            walletAdapter.rpcCluster = RpcCluster.MainnetBeta
 
             if (hasValidAuthToken()) {
                 connectWalletButton.visibility = View.GONE
@@ -156,7 +167,7 @@
                                 when (connectedNetwork) {
                                     "Solana" -> {
                                         if (canTransact) {
-                                            Log.e("MainActivity", "Calling payment function")
+                                            Log.e("MainActivity", "Calling payment function rememebr we have ${this.authToken}")
                                             if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
                                                 if (id == 1) {
                                                     Log.d("MainActivity", "SOL PAY ")
@@ -325,10 +336,12 @@
                         val transactionBytes = Base64.decode(swapTransaction, Base64.DEFAULT)
                         // Start the signing process
                         Log.d("sendSwap", "Swap Transaction Response: $transactionBytes")
-                        val walletAdapterClient = MobileWalletAdapter() // Initialize properly with context and other parameters
-                        val result = walletAdapterClient.transact(activityResultSender) {
-                            // These URI and token values should be provided appropriately
+                        walletAdapter.rpcCluster = RpcCluster.MainnetBeta
+                        val result = walletAdapter.transact(activityResultSender) {
+
+                            // Ensure we're authorized first
                             reauthorize(identityUri, iconUri, identityName, authToken)
+                            // Then sign and send the transaction
                             signAndSendTransactions(arrayOf(transactionBytes))
                         }
                         when (result) {
@@ -544,72 +557,64 @@
             //    }
             //    .show()
         }
-
+        data class DappIdentity(
+            val uri: Uri? = null, val iconRelativeUri: Uri? = null, val name: String
+        )
         private fun connectSolanaWallet() {
             scope.launch {
                 try {
-                    val walletAdapterClient = MobileWalletAdapter()
-                    val result = walletAdapterClient.transact(activityResultSender) {
+
+                    walletAdapter.rpcCluster = RpcCluster.MainnetBeta
+                    //walletAdapter.blockchain = Blockchain.Solana.Mainnet
+                    //better to use Blockchain but we need to import something still unknown because Solana undefined
+                    val result = walletAdapter.transact(activityResultSender) { authResult ->
                         authorize(
-                            identityUri = identityUri,
-                            iconUri = iconUri,
-                            identityName = identityName
+                            identityUri,
+                            iconUri,
+                            identityName,
                         )
                     }
-
-                    // Handle the result of Solana wallet connection attempt
+                    Log.e("Mainactivity","result is ${result}")
                     when (result) {
                         is TransactionResult.Success -> {
-                            // Save the values from the successful result
-                            userAddress = PublicKey(result.payload.publicKey).toBase58()
-                            authToken = result.payload.authToken
+                            val authResult = result.payload
+                            userAddress = authResult.accounts.firstOrNull()?.publicKey?.let {
+                                Base58.encode(it)
+                            } ?: run {
+                                Log.e("MainActivity", "No account returned from wallet")
+                                return@launch
+                            }
+                            authToken = authResult.authToken
                             canTransact = true
-                            // Log the result and update UI on the main thread
+
                             Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
                             connectedNetwork = "Solana"
-                            // After successful wallet connection
+
                             storeAuthData(authToken, userAddress, connectedNetwork)
-                            UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
-                            runOnUiThread {
+
+                            withContext(Dispatchers.Main) {
+                                UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
                                 connectWalletButton.visibility = View.GONE
-                                updateButton() // Update the connect button text
+                                updateButton()
                                 updateUserAddressUI(userAddress)
                                 cardLayout.visibility = View.VISIBLE
-                                updateTokenList(this@MainActivity,connectedNetwork)
+                                updateTokenList(this@MainActivity, connectedNetwork)
                             }
+
                             val navigationView: NavigationView = findViewById(R.id.nav_view)
                             updateMenuItemsVisibility(navigationView)
                         }
-
                         is TransactionResult.NoWalletFound -> {
-                            noWallet = true
-                            canTransact = false
-                            runOnUiThread {
-                                updateButton() // Update the connect button text
-                                // Show a message to the user prompting them to install a wallet
-                            }
+                            // Handle no wallet found case
                         }
-
                         is TransactionResult.Failure -> {
-                            canTransact = false
-                            runOnUiThread {
-                                updateButton() // Update the connect button text
-                                // Show an error message to the user
-                            }
-                        }
-
-                        else -> {
-                            // Handle any other cases
-                            runOnUiThread {
-                                // Update the UI for an unknown error
-                            }
+                            // Handle failure case
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("MainActivity", "Error connecting to Solana Wallet: ${e.message}")
-                    // Handle exceptions
-                    runOnUiThread {
-                        // Update the UI to show an error message
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Error connecting to wallet", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -919,9 +924,10 @@
                         )
                     )
                     val bytes = transaction.serialize(SerializeConfig(requireAllSignatures = false))
+                    walletAdapter.rpcCluster = RpcCluster.MainnetBeta
 
-                    val walletAdapterClient = MobileWalletAdapter()
-                    val result = walletAdapterClient.transact(activityResultSender) {
+                    val result = walletAdapter.transact(activityResultSender) {
+                        // Ensure we're authorized first
                         reauthorize(identityUri, iconUri, identityName, authToken)
                         signAndSendTransactions(arrayOf(bytes))
                     }
@@ -992,10 +998,11 @@
                         )
                         transaction.recentBlockhash = blockhash
                         transaction.feePayer =PublicKey(senderAccount)
+                        walletAdapter.rpcCluster = RpcCluster.MainnetBeta
 
                         // Sign and send the transaction using the wallet adapter
-                        val walletAdapterClient = MobileWalletAdapter()
-                        val result = walletAdapterClient.transact(activityResultSender) {
+                        val result = walletAdapter.transact(activityResultSender) {
+                            // Ensure we're authorized first
                             reauthorize(identityUri, iconUri, identityName, authToken)
                             val sig =  signAndSendTransactions(arrayOf(transaction.serialize(SerializeConfig(requireAllSignatures = false)))).signatures.firstOrNull()
                             val txid=Base58.encode(sig)
