@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/mainLayout"
         android:layout_width="match_parent"
@@ -37,6 +36,7 @@
             app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
@@ -48,17 +48,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="46dp" />
-
-        <TextView
-            android:id="@+id/textViewTokenName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="8dp"/>
 
         <TextView
             android:id="@+id/userAddressTextView"
@@ -93,50 +82,90 @@
             android:layout_marginTop="16dp"
             app:layout_constraintWidth_percent="0.9" />
 
-
-
-
         <LinearLayout
             android:id="@+id/buttonContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="4"
-            app:layout_constraintBottom_toTopOf="@id/textViewTokenName"
+            android:layout_marginHorizontal="18dp"
+            app:layout_constraintTop_toBottomOf="@id/cardLayout"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardLayout">
+            app:layout_constraintEnd_toEndOf="parent">
 
             <Button
                 android:id="@+id/PayButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="65dp"
                 android:layout_weight="1"
                 android:text="PAY"
                 android:layout_marginEnd="8dp"/>
 
             <Spinner
                 android:id="@+id/spinnerToken"
-                android:layout_width="7dp"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="70dp"
                 android:layout_weight="2" />
 
             <Button
                 android:id="@+id/DeclineButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="65dp"
                 android:layout_weight="1"
-                android:text="DECLINE"
+                android:text="NOPE"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
+        <androidx.cardview.widget.CardView
+            android:id="@+id/paymentInfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#80000000"
+            app:layout_constraintTop_toBottomOf="@id/buttonContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.9"
+            android:visibility="gone">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Payment Request:"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="#FFFFFF"/>
+
+                <TextView
+                    android:id="@+id/paymentAddressTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#FFFFFF"/>
+
+                <TextView
+                    android:id="@+id/paymentAmountTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <Button
             android:id="@+id/ChargeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Invoice"
+            android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -146,6 +175,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Explore"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -154,6 +185,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Config"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 

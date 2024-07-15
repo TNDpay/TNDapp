@@ -79,6 +79,24 @@ class RpcService {
             null
         }
     }
+
+    suspend fun getCurrentSlot(): Long? {
+        val request = SlotRequest()
+        return try {
+            val response = heliusApi.getSlot(request)
+            if (response.isSuccessful) {
+                val slotResult = response.body()
+                Log.d(TAG, "Get current slot success: $slotResult")
+                slotResult?.result
+            } else {
+                Log.e(TAG, "Error getting current slot: HTTP ${response.code()} ${response.message()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception when getting current slot: ${e.message}", e)
+            null
+        }
+    }
     suspend fun getTokenAccountsByOwner(pubKey: String,Mint: String): Boolean {
         val request = TokenOwnerRequest(
             jsonrpc = "2.0",
@@ -108,6 +126,17 @@ class RpcService {
 
 }
 
+data class SlotRequest(
+    val jsonrpc: String = "2.0",
+    val id: Int = 1,
+    val method: String = "getSlot"
+)
+
+data class SlotResponse(
+    val jsonrpc: String,
+    val result: Long,
+    val id: Int
+)
 data class AssetRequest(
     val jsonrpc: String = "2.0",
     val id: String = "my-id",

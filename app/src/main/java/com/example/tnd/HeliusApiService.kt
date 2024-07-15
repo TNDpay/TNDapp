@@ -23,6 +23,9 @@ interface HeliusApiService {
     @POST("/")
     suspend fun getTokenAccountsByOwner(@Body request: TokenOwnerRequest): Response<TokenAccountResponse>
 
+    @POST(".")
+    suspend fun getSlot(@Body request: SlotRequest): Response<SlotResponse>
+
 }
 data class TokenOwnerRequest(
     val jsonrpc: String = "2.0",

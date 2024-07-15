@@ -57,5 +57,18 @@ class Utils {
             return address
         }
 
+        suspend fun getMinContextSlot(rpcService: RpcService): Map<String, Long>? {
+            return try {
+                val slot = rpcService.getCurrentSlot()
+                if (slot != null) {
+                    mapOf("minContextSlot" to slot)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("Utils", "Error getting minContextSlot: ${e.message}")
+                null
+            }
+        }
     }
 }

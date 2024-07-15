@@ -64,6 +64,8 @@
     import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
     import com.solana.mobilewalletadapter.clientlib.RpcCluster
     import com.solana.mobilewalletadapter.clientlib.Blockchain
+    import com.solana.mobilewalletadapter.clientlib.Solana
+    import androidx.cardview.widget.CardView
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -80,7 +82,7 @@
         private val scope = CoroutineScope(Job() + Dispatchers.Main)
         private lateinit var activityResultSender: ActivityResultSender
         private lateinit var identityUri: Uri
-        private var chain = ""
+        private lateinit var chain:String
         private lateinit var iconUri: Uri
         private lateinit var identityName: String
         private lateinit var authToken: String
@@ -119,7 +121,6 @@
             // Initialize ConnectionIdentity
             connectionIdentity = ConnectionIdentity(identityUri,iconUri,identityName)
             walletAdapter = MobileWalletAdapter(connectionIdentity)
-            walletAdapter.rpcCluster = RpcCluster.MainnetBeta
 
             if (hasValidAuthToken()) {
                 connectWalletButton.visibility = View.GONE
@@ -135,6 +136,7 @@
                 this.connectedNetwork = retrievedNetwork ?: ""
                 canTransact = true
                 updateUserAddressUI(retrievedUserAddress)
+                UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
 
             } else {
                 connectWalletButton.visibility = View.VISIBLE
@@ -450,14 +452,9 @@
                         val swapQuote = response.body()
                         val destToken: String
                         Log.d("SwapFunction", "token mint address : $output")
-                        if (output=="So11111111111111111111111111111111111111112"){
-                            destToken=receiverAddr
-                            Log.d("SwapFunction", "Sol addres should be sent to : $receiverAddr")
-                        }else {
-                            val publicAddresReceiver=PublicKey(receiverAddr)
-                            val publicMintRT=PublicKey(output)
-                            destToken=SolanaUtils.findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
-                        }
+                        val publicAddresReceiver=PublicKey(receiverAddr)
+                        val publicMintRT=PublicKey(output)
+                        destToken=SolanaUtils.findAssociatedTokenAddress(publicAddresReceiver, publicMintRT).toString()
                         // Proceed to Step 2: Obtain swap instructions using the swap quote
                         swapQuote?.let {
                             val swapRequest = SwapRequest(
@@ -557,21 +554,19 @@
             //    }
             //    .show()
         }
-        data class DappIdentity(
-            val uri: Uri? = null, val iconRelativeUri: Uri? = null, val name: String
-        )
         private fun connectSolanaWallet() {
             scope.launch {
                 try {
 
-                    walletAdapter.rpcCluster = RpcCluster.MainnetBeta
-                    //walletAdapter.blockchain = Blockchain.Solana.Mainnet
+                    //walletAdapter.rpcCluster = walletAdapter.rpcCluster ?: RpcCluster.MainnetBeta
+                    walletAdapter.blockchain = Solana.Mainnet
                     //better to use Blockchain but we need to import something still unknown because Solana undefined
-                    val result = walletAdapter.transact(activityResultSender) { authResult ->
+                    val result = walletAdapter.transact(activityResultSender) {
                         authorize(
                             identityUri,
-                            iconUri,
-                            identityName,
+                            iconUri,//= Uri.parse("android.resource://android/drawable/sym_def_app_icon"),
+                            identityName="TND",
+                            chain="solana:mainnet"
                         )
                     }
                     Log.e("Mainactivity","result is ${result}")
@@ -781,7 +776,7 @@
                 PayButton.visibility = View.GONE
                 declineButton.visibility = View.GONE
                 spinnerToken.visibility = View.GONE
-                findViewById<TextView>(R.id.textViewTokenName).text = ""
+                findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
                 findViewById<TextView>(R.id.userAddressTextView).text = ""
                 connectWalletButton.visibility = View.VISIBLE
                 cardLayout.visibility = View.GONE
@@ -800,7 +795,7 @@
                 PayButton.visibility = View.GONE
                 declineButton.visibility = View.GONE
                 spinnerToken.visibility = View.GONE
-                findViewById<TextView>(R.id.textViewTokenName).text = ""
+                findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
 
             }
             updateButton()
@@ -828,7 +823,35 @@
             super.onPause()
             nfcAdapter?.disableReaderMode(this)
         }
+        private fun updatePaymentInfo(paymentAddress: String, paymentAmount: Double, tokenName: String) {
+            // Find the TokenItem based on the tokenName
+            val tokenItem = TokenData.tokenList_general.find { it.name == tokenName }
 
+            if (tokenItem != null) {
+                // Get the USD value asynchronously
+                SolanaUtils.getTokenPriceInDollars(tokenItem) { price ->
+                    val usdValue = price?.times(paymentAmount)
+
+                    runOnUiThread {
+                        findViewById<TextView>(R.id.paymentAddressTextView).text = "to: $paymentAddress"
+                        findViewById<TextView>(R.id.paymentAmountTextView).text = "Amount: $paymentAmount $tokenName ($%.2f$)".format(usdValue)
+
+                        // Show the payment info card
+                        findViewById<CardView>(R.id.paymentInfoCard).visibility = View.VISIBLE
+
+                        // Show/hide other buttons as needed
+                        PayButton.visibility = View.VISIBLE
+                        declineButton.visibility = View.VISIBLE
+                        spinnerToken.visibility = View.VISIBLE
+                    }
+                }
+            } else {
+                // Handle the case where the token is not found
+                runOnUiThread {
+                    Toast.makeText(this, "Token not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         override fun onTagDiscovered(tag: Tag?) {
             tag?.let {
                 val isoDep = IsoDep.get(it)
@@ -841,14 +864,19 @@
                     paymentAddress = paymentInfo[0]
                     paymentAmount = paymentInfo[1].toDoubleOrNull()
                     tokenId = paymentInfo[2].toIntOrNull()
+                    val tokenName = TokenData.tokenList_sol.find { it.id == tokenId }?.name
+
                     Log.d("MainActivity", "HCE message: $responseString")
                     runOnUiThread {
-                        // Set the text for payment address and amount
-                        val paymentRequestText = "Payment request:\n$paymentAddress\nAmount: $paymentAmount"
-                        findViewById<TextView>(R.id.textViewTokenName).text = paymentRequestText
+                        // Call updatePaymentInfo only if all required values are non-null
+                        if (paymentAddress != null && paymentAmount != null && tokenName != null) {
+                            updatePaymentInfo(paymentAddress!!, paymentAmount!!, tokenName)
+                        } else {
+                            Log.e("MainActivity", "Some payment info is null: address=$paymentAddress, amount=$paymentAmount, token=$tokenName")
+                        }
 
                         // Only show the pay button if we have valid payment info
-                        SolanaUtils.checkAddressForFlag(this,paymentInfo[0])
+                        SolanaUtils.checkAddressForFlag(this, paymentInfo[0])
 
                         PayButton.visibility = if (paymentAddress != null && paymentAmount != null) View.VISIBLE else View.GONE
                         declineButton.visibility = View.VISIBLE
@@ -856,7 +884,7 @@
                     }
                 } else {
                     runOnUiThread {
-                        findViewById<TextView>(R.id.textViewTokenName).text = ""
+                        findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
                         PayButton.visibility = View.GONE
                         declineButton.visibility = View.GONE
                         spinnerToken.visibility = View.GONE
