@@ -34,8 +34,8 @@ android {
         applicationId = "com.tnd.tnd"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         resConfigs("en")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -70,6 +70,7 @@ android {
 
 dependencies {
 
+    implementation("androidx.preference:preference-ktx:1.2.1")
     val hilt_version = "2.43.2"
     //implementation("io.metamask.androidsdk:metamask-android-sdk:0.1.2")
 

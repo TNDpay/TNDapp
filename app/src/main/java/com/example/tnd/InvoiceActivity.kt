@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.nfc.NfcAdapter
 import android.nfc.NdefMessage
-import android.nfc.NdefRecord
 import android.os.Bundle
 import android.widget.*
 import android.view.View
@@ -18,9 +17,7 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.util.Log
-import android.nfc.NfcEvent
-import android.nfc.tech.Ndef
-
+import com.example.tnd.SetPreferencesActivity.Preferences
 
 
 
@@ -91,6 +88,11 @@ class InvoiceActivity : Activity() {
             TokenAdapter(this, TokenData.tokenList_sol)
         }
         spinnerToken.adapter = tokenAdapter
+        val defaultInvoiceTokenId = Preferences.getDefaultInvoiceTokenId(this)
+        val defaultInvoiceToken = TokenData.tokenList_sol.find { it.id == defaultInvoiceTokenId }
+        defaultInvoiceToken?.let {
+            spinnerToken.setSelection(tokenAdapter.getPosition(it))
+        }
         updateDollarAmount()
 
 
@@ -206,6 +208,7 @@ class InvoiceActivity : Activity() {
     }
     private fun getPrice(selectedToken: TokenData.TokenItem, callback: (Double?) -> Unit) {
         Log.d("InvoiceActivity","Connected Networkis :${connectedNetwork}")
+        connectedNetwork ="Solana" //Tmp, fix while we are only in Solana
         when (connectedNetwork) {
             "Solana" -> {
                 SolanaUtils.getTokenPriceInDollars(selectedToken) { price ->

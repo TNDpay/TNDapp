@@ -8,5 +8,4 @@
     <string name="payment_request_format">Payment request:\nAddress: %1$s\nAmount: %2$.2f\nToken: %3$s</string>
     <string name="error_invalid_payment_info">Invalid payment information received.</string>
     <string name="title_activity_explore">ExploreActivity</string>
-
 </resources>

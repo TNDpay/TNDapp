@@ -62,10 +62,10 @@
     import org.web3j.abi.datatypes.generated.Uint8
     import org.web3j.protocol.core.DefaultBlockParameterName
     import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
-    import com.solana.mobilewalletadapter.clientlib.RpcCluster
-    import com.solana.mobilewalletadapter.clientlib.Blockchain
     import com.solana.mobilewalletadapter.clientlib.Solana
     import androidx.cardview.widget.CardView
+    import com.example.tnd.SetPreferencesActivity.Preferences
+
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
         private lateinit var connectWalletButton: Button
@@ -239,6 +239,12 @@
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
+                    R.id.nav_options -> {
+                        val intent = Intent(this, SetPreferencesActivity::class.java)
+                        startActivity(intent)
+                        drawerLayout.closeDrawer(GravityCompat.START)
+                        true
+                    }
                     //R.id.nav_pay_hist -> {
                         //val intent = Intent(this@MainActivity, HistoryActivity::class.java)
                         //startActivity(intent)
@@ -253,7 +259,7 @@
                     }
                     R.id.nav_telegram -> {
                         // Handle Twitter option by opening the Twitter URL
-                        Utils.openWebPage(this,"https://t.me/tndpay")
+                        Utils.openWebPage(this,"https://t.me/tndpayments")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
@@ -286,7 +292,12 @@
                 TokenAdapter(this, TokenData.tokenList_sol)
             }
             spinnerToken.adapter = tokenAdapter
-
+            // Set the default token for payments
+            val defaultPaymentTokenId = Preferences.getDefaultPaymentTokenId(this)
+            val defaultPaymentToken = TokenData.tokenList_sol.find { it.id == defaultPaymentTokenId }
+            defaultPaymentToken?.let {
+                spinnerToken.setSelection(tokenAdapter.getPosition(it))
+            }
 
             spinnerToken.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -338,7 +349,7 @@
                         val transactionBytes = Base64.decode(swapTransaction, Base64.DEFAULT)
                         // Start the signing process
                         Log.d("sendSwap", "Swap Transaction Response: $transactionBytes")
-                        walletAdapter.rpcCluster = RpcCluster.MainnetBeta
+                        walletAdapter.blockchain = Solana.Mainnet
                         val result = walletAdapter.transact(activityResultSender) {
 
                             // Ensure we're authorized first
@@ -557,16 +568,14 @@
         private fun connectSolanaWallet() {
             scope.launch {
                 try {
-
-                    //walletAdapter.rpcCluster = walletAdapter.rpcCluster ?: RpcCluster.MainnetBeta
+                    chain="solana:mainnet"
                     walletAdapter.blockchain = Solana.Mainnet
-                    //better to use Blockchain but we need to import something still unknown because Solana undefined
                     val result = walletAdapter.transact(activityResultSender) {
                         authorize(
                             identityUri,
-                            iconUri,//= Uri.parse("android.resource://android/drawable/sym_def_app_icon"),
-                            identityName="TND",
-                            chain="solana:mainnet"
+                            iconUri,
+                            identityName,
+                            chain
                         )
                     }
                     Log.e("Mainactivity","result is ${result}")
@@ -952,7 +961,7 @@
                         )
                     )
                     val bytes = transaction.serialize(SerializeConfig(requireAllSignatures = false))
-                    walletAdapter.rpcCluster = RpcCluster.MainnetBeta
+                    walletAdapter.blockchain = Solana.Mainnet
 
                     val result = walletAdapter.transact(activityResultSender) {
                         // Ensure we're authorized first
@@ -1026,8 +1035,7 @@
                         )
                         transaction.recentBlockhash = blockhash
                         transaction.feePayer =PublicKey(senderAccount)
-                        walletAdapter.rpcCluster = RpcCluster.MainnetBeta
-
+                        walletAdapter.blockchain = Solana.Mainnet
                         // Sign and send the transaction using the wallet adapter
                         val result = walletAdapter.transact(activityResultSender) {
                             // Ensure we're authorized first

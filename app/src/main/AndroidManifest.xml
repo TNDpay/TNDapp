@@ -58,6 +58,8 @@
                     android:host="wallet" />
             </intent-filter>
         </activity>
+        <activity android:name=".SetPreferencesActivity"
+            android:exported="false"/>
         <activity
             android:name=".InvoiceActivity"
             android:exported="true" >

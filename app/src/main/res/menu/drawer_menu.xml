@@ -8,6 +8,10 @@
         android:id="@+id/nav_disconnect_wallet"
         android:title="Disconnect Wallet"
         android:icon="@drawable/disconnect" />
+    <item
+        android:id="@+id/nav_options"
+        android:title="Options"
+        android:icon="@drawable/config" />
 
     <item
         android:id="@+id/nav_divider"

@@ -1,7 +1,5 @@
 package com.example.tnd
 
-import org.web3j.protocol.core.methods.request.Filter.ListTopic
-
 object TokenData {
     val tokenList_sol = listOf(
         TokenItem(1, "SOL", R.drawable.token1_logo, 9, "So11111111111111111111111111111111111111112"),
