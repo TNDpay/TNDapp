@@ -65,48 +65,5 @@ class SolanaUtils {
                 }
             })
         }
-        fun checkAddressForFlag(context: Context, address: String) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url("https://api.solana.fm/v0/accounts/$address")
-                    .get()
-                    .addHeader("accept", "application/json")
-                    .build()
-
-                try {
-                    val response = client.newCall(request).execute()
-                    if (response.isSuccessful) {
-                        val responseBody = response.body?.string()
-                        if (responseBody != null) {
-                            val gson = Gson()
-                            val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
-                            val status = jsonResponse.get("status").asString
-                            if (status == "Success") {
-                                val result = jsonResponse.getAsJsonObject("result")
-                                val data = result.getAsJsonObject("data")
-                                val flag = data.get("flag").asString
-                                if (flag == "hacker") {
-                                    withContext(Dispatchers.Main) {
-                                        AlertDialog.Builder(context).apply {
-                                            setTitle("Security Alert")
-                                            setMessage("This address is flagged as a hacker: $address")
-                                            setPositiveButton("OK", null)
-                                            create().show()
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Handle response error
-                        Log.e("checkAddressForFlag", "Failed to fetch address data: ${response.message}")
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // Handle network error or parsing error
-                }
-            }
-        }
     }
 }
