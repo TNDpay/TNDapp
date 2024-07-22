@@ -56,6 +56,27 @@
             android:layout_weight="1"/>
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Base Currency"
+            android:textSize="18sp"
+            android:gravity="center_vertical"/>
+
+        <Spinner
+            android:id="@+id/spinnerBaseCurrency"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
     <Button
         android:id="@+id/buttonSave"
         android:layout_width="match_parent"

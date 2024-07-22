@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 // Load local.properties
@@ -34,17 +34,13 @@ android {
         applicationId = "com.tnd.tnd"
         minSdk = 28
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.3"
         resConfigs("en")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val ironForgeApiKey = localProperties["IronForge_API_KEY"] as? String
-        if (ironForgeApiKey != null) {
-            buildConfigField("String", "IRONFORGE_API_KEY", "\"$ironForgeApiKey\"")
-        } else {
-            throw GradleException("IronForge API Key not found in local.properties")
-        }
+        buildConfigField("String", "HELIUS_API_KEY", "\"${localProperties.getProperty("HELIUS_API_KEY", "")}\"")
+
     }
 
     buildTypes {
@@ -71,6 +67,8 @@ android {
 dependencies {
 
     implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
     val hilt_version = "2.43.2"
     //implementation("io.metamask.androidsdk:metamask-android-sdk:0.1.2")
 
@@ -101,6 +99,7 @@ dependencies {
     implementation("com.github.metaplex-foundation:SolanaKT:2.1.1")
     //UI
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
+    implementation("com.github.cachapa:ExpandableLayout:2.9.2")
     //HTTP REQUEST
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -126,5 +125,10 @@ dependencies {
     implementation("org.web3j:crypto:4.8.7"){
         exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
     }
+
+    //Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    //implementation("com.google.firebase:firebase-analytics")
+
 
 }

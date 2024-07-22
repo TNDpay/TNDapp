@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="Find places to use crypto"
+        android:text="Find places to use Solana"
         android:textSize="24sp"
         android:gravity="center"
         android:background="@android:color/white"/>
@@ -22,5 +22,39 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/title" />
+
+    <!-- Add Store Button -->
+    <Button
+        android:id="@+id/btnAddStore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Store"
+        android:layout_below="@id/title"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"/>
+
+    <!-- Confirm/Cancel Layout -->
+    <LinearLayout
+        android:id="@+id/layoutConfirmCancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnConfirm"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Confirm"/>
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cancel"/>
+    </LinearLayout>
 
 </RelativeLayout>

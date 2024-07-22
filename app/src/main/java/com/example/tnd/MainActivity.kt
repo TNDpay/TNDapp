@@ -93,7 +93,7 @@
         private lateinit var ethereum: Ethereum
         private lateinit var walletAdapter: MobileWalletAdapter
         private lateinit var connectionIdentity: ConnectionIdentity
-
+        private lateinit var userCurrency: Currency
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,6 +144,10 @@
                     connectWallet()
                 }
             }
+            // Load user's preferred currency
+            val currencyCode = SetPreferencesActivity.Preferences.getDefaultBaseCurrency(this)
+            userCurrency = currencies.find { it.code == currencyCode } ?: currencies.first()
+
             connectWalletButton.setOnClickListener {
                 connectWallet()
             }
@@ -198,16 +202,6 @@
                                             Log.e("MainActivity", "Cannot make payment: No user address or can't transact.")
                                         }
                                     }
-                                    "Polygon" -> {
-                                        CoroutineScope(Dispatchers.Main).launch {
-                                            try {
-                                                payWMM(amount, address)
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                            }
-                                        }
-                                    }
-
                                     else -> {
                                         Log.e("MainActivity", "ERROR because connected network value rn is ${connectedNetwork}")
                                     }
@@ -270,7 +264,7 @@
                         true
                     }
                     R.id.nav_explore_form ->{
-                        Utils.openWebPage(this,"https://forms.gle/jD5Rrdt1hcCcqdgk7")
+                        Utils.openWebPage(this,"https://github.com/TNDpay/vendors/blob/main/user_license.MD")
                         drawerLayout.closeDrawer(GravityCompat.START)
                         true
                     }
@@ -709,148 +703,72 @@
                 }
             }
         }
-        private suspend fun getBridgingCost():String {
-            return withContext(Dispatchers.IO) {
-                // Connect to an Ethereum node (like Infura)
-                val api =BuildConfig.INFURA
-                val web3 = Web3j.build(HttpService("https://polygon-mainnet.infura.io/v3/$api"))
-                val destinationChainId = "4"
-                val messenger = "1"
-                val token = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
-                // Smart contract address
-                val contractAddress = "0x7775d63836987f444E2F14AA0fA2602204D7D3E0"
 
-                // Load the smart contract
-                val function = Function(
-                    "getBridgingCostInTokens",
-                    listOf(Uint256(BigInteger(destinationChainId, 16)), Uint8(messenger.toBigInteger()), Address(token)),
-                    listOf(object : TypeReference<Uint256>() {})
-                )
-                val encodedFunction = FunctionEncoder.encode(function)
-                // Call the smart contract function
-                val ethCall = web3.ethCall(
-                    org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(
-                        null,
-                        contractAddress,
-                        encodedFunction
-                    ),
-                    DefaultBlockParameterName.LATEST
-                ).send()
-
-                val result = ethCall.value
-                Log.d(TAG, "Raw result: $result")
-
-                return@withContext if (result != null) {
-                    Log.d(TAG, "Bridging Cost (hex): $result")
-                    result
-                } else {
-                    Log.e(TAG, "Failed to get bridging cost")
-                    "0"
-                }
-            }
-        }
-        private suspend fun payWMM(raw_amount: Double, solanaAddress: String)  {
-            val from = ethereum.selectedAddress
-            val to = "0x7775d63836987f444e2f14aa0fa2602204d7d3e0"
-            val methodId = "0x4cd480bd"
-            val token = "0x0000000000000000000000003c499c542cef5e3811e1192ce70d8cc03d5c3359"
-            val destinationChainId = "0000000000000000000000000000000000000000000000000000000000000004"
-            val receiveToken = "c6fa7af3bedbad3a3d65f36aabc97431b1bbe4c2d2f6e0e47ca60203452f5d61"
-            val nonce = "0"
-            val messenger = "0000000000000000000000000000000000000000000000000000000000000001"
-
-            fun solanaAddressToHex(solanaAddress: String): String {
-                val publicKeyBytes = Base58.decode(solanaAddress)
-                val lastBytes = publicKeyBytes.takeLast(32)
-                return lastBytes.joinToString("") { "%02x".format(it) }
-            }
-
-
-            val amount = BigDecimal(raw_amount).toBigInteger().toString(16).padStart(64, '0')
-
-            //val feeTokenAmount = getBridgingCost()
-            val encodedFeeTokenAmount = getBridgingCost() //feeTokenAmount.toString(16).padStart(64, '0')
-            Log.e(TAG, "GOT bridging cost $encodedFeeTokenAmount")
-            val recipient = solanaAddressToHex(solanaAddress)
-
-            // Encode the function parameters
-            val encodedToken = Numeric.toHexString(Numeric.hexStringToByteArray(token))
-            val encodedAmount = Numeric.toHexString(BigInteger(amount, 16).toByteArray())
-            val encodedRecipient = Numeric.toHexString(Numeric.hexStringToByteArray(recipient))
-            val encodedDestinationChainId = Numeric.toHexString(BigInteger(destinationChainId, 16).toByteArray())
-            val encodedReceiveToken = Numeric.toHexString(Numeric.hexStringToByteArray(receiveToken))
-            val encodedNonce = Numeric.toHexString(BigInteger(nonce, 16).toByteArray())
-            val encodedMessenger = Numeric.toHexString(BigInteger(messenger, 16).toByteArray())
-
-            // Concatenate the method ID and encoded parameters
-            val data = methodId +
-                    encodedToken.substring(2).padStart(64, '0') +
-                    encodedAmount.substring(2).padStart(64, '0') +
-                    encodedRecipient.substring(2).padStart(64, '0') +
-                    encodedDestinationChainId.substring(2).padStart(64, '0') +
-                    encodedReceiveToken.substring(2).padStart(64, '0') +
-                    encodedNonce.substring(2).padStart(64, '0') +
-                    encodedMessenger.substring(2).padStart(64, '0') +
-                    encodedFeeTokenAmount.substring(2).padStart(64, '0')
-
-            val params: Map<String, Any> = mapOf(
-                "from" to from,
-                "to" to to,
-                "gas" to "0x7a120", // Adjust the gas limit as needed
-                "value" to "0x0", // Set the value to 0 if not sending Ether
-                "data" to data
-            )
-
-            // Create request
-            val transactionRequest = EthereumRequest(
-                method = EthereumMethod.ETH_SEND_TRANSACTION.value,
-                params = listOf(params)
-            )
-
-            ethereum.sendRequest(transactionRequest) { result ->
-                if (result is RequestError) {
-                    // handle error
-                } else {
-                    Log.d(TAG, "Ethereum transaction result: $result")
-                    Utils.openWebPage(this,"https://polygonscan.com/tx/$result")
-                }
-            }
-        }
         companion object {
             private const val TAG = "MainActivity"
         }
 
         private fun disconnectWallet() {
+            scope.launch {
+                try {
+                    val result = walletAdapter.disconnect(activityResultSender)
 
-            val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
-            with(sharedPreferences.edit()) {
-                remove("auth_token")
-                remove("user_address")
-                remove("connectedNetwork")
-                apply()
+                    when (result) {
+                        is TransactionResult.Success -> {
+                            Log.d("MainActivity", "Successfully disconnected wallet")
+
+                            // Clear shared preferences
+                            val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
+                            with(sharedPreferences.edit()) {
+                                remove("auth_token")
+                                remove("user_address")
+                                remove("connectedNetwork")
+                                apply()
+                            }
+
+                            // Update the UI and variables to reflect the disconnected state
+                            authToken = ""
+                            userAddress = ""
+                            noWallet = true
+                            canTransact = false
+
+                            withContext(Dispatchers.Main) {
+                                PayButton.visibility = View.GONE
+                                declineButton.visibility = View.GONE
+                                spinnerToken.visibility = View.GONE
+                                findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
+                                findViewById<TextView>(R.id.userAddressTextView).text = ""
+                                connectWalletButton.visibility = View.VISIBLE
+                                cardLayout.visibility = View.GONE
+
+                                updateButton()
+                                val navigationView: NavigationView = findViewById(R.id.nav_view)
+                                updateMenuItemsVisibility(navigationView)
+                                navigationView.menu.clear() // Clear existing menu
+                                navigationView.inflateMenu(R.menu.drawer_menu) // Re-inflate the menu
+                                updateMenuItemsVisibility(navigationView)
+                            }
+                        }
+                        is TransactionResult.Failure -> {
+                            Log.e("MainActivity", "Failed to disconnect wallet: ${result}")
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@MainActivity, "Failed to disconnect wallet", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        is TransactionResult.NoWalletFound -> {
+                            Log.e("MainActivity", "No wallet found to disconnect")
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@MainActivity, "No wallet found to disconnect", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error disconnecting wallet: ${e.message}")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Error disconnecting wallet", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            // Update the UI and variables to reflect the disconnected state
-            authToken = ""
-            userAddress = ""
-            noWallet = true
-            canTransact = false
-            runOnUiThread {
-                PayButton.visibility = View.GONE
-                declineButton.visibility = View.GONE
-                spinnerToken.visibility = View.GONE
-                findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
-                findViewById<TextView>(R.id.userAddressTextView).text = ""
-                connectWalletButton.visibility = View.VISIBLE
-                cardLayout.visibility = View.GONE
-
-            }
-            updateButton()
-            val navigationView: NavigationView = findViewById(R.id.nav_view)
-            updateMenuItemsVisibility(navigationView)
-            navigationView.menu.clear() // Clear existing menu
-            navigationView.inflateMenu(R.menu.drawer_menu) // Re-inflate the menu
-            updateMenuItemsVisibility(navigationView)
         }
         private fun decline(){
             runOnUiThread {
@@ -880,6 +798,20 @@
                 null)
             val backgroundImageView = findViewById<ImageView>(R.id.backgroundImageView)
             UIUtils.updateBackgroundBasedOnNFCState(backgroundImageView)
+
+            //For preferences:
+            val currencyCode = SetPreferencesActivity.Preferences.getDefaultBaseCurrency(this)
+            userCurrency = currencies.find { it.code == currencyCode } ?: currencies.first()
+
+            // Reload default payment token
+            val defaultPaymentTokenId = SetPreferencesActivity.Preferences.getDefaultPaymentTokenId(this)
+            val tokenAdapter = spinnerToken.adapter as? TokenAdapter
+            val defaultPaymentToken = TokenData.tokenList_sol.find { it.id == defaultPaymentTokenId }
+            defaultPaymentToken?.let {
+                tokenAdapter?.let { adapter ->
+                    spinnerToken.setSelection(adapter.getPosition(it))
+                }
+            }
         }
 
         override fun onPause() {
@@ -887,29 +819,52 @@
             nfcAdapter?.disableReaderMode(this)
         }
         private fun updatePaymentInfo(paymentAddress: String, paymentAmount: Double, tokenName: String) {
-            // Find the TokenItem based on the tokenName
             val tokenItem = TokenData.tokenList_general.find { it.name == tokenName }
 
             if (tokenItem != null) {
-                // Get the USD value asynchronously
-                SolanaUtils.getTokenPriceInDollars(tokenItem) { price ->
-                    val usdValue = price?.times(paymentAmount)
+                SolanaUtils.getTokenPriceInDollars(tokenItem) { priceInUSD ->
+                    if (priceInUSD != null) {
+                        val calculateFiatValue = { convertedPrice: Double ->
+                            val fiatValue = convertedPrice * paymentAmount
+                            runOnUiThread {
+                                findViewById<TextView>(R.id.paymentAddressTextView).text = "to: $paymentAddress"
+                                findViewById<TextView>(R.id.paymentAmountTextView).text =
+                                    "Amount: $paymentAmount $tokenName (${userCurrency.symbol}%.2f ${userCurrency.code})".format(fiatValue)
 
-                    runOnUiThread {
-                        findViewById<TextView>(R.id.paymentAddressTextView).text = "to: $paymentAddress"
-                        findViewById<TextView>(R.id.paymentAmountTextView).text = "Amount: $paymentAmount $tokenName ($%.2f$)".format(usdValue)
+                                // Show the payment info card
+                                findViewById<CardView>(R.id.paymentInfoCard).visibility = View.VISIBLE
 
-                        // Show the payment info card
-                        findViewById<CardView>(R.id.paymentInfoCard).visibility = View.VISIBLE
+                                // Show/hide other buttons as needed
+                                PayButton.visibility = View.VISIBLE
+                                declineButton.visibility = View.VISIBLE
+                                spinnerToken.visibility = View.VISIBLE
+                            }
+                        }
 
-                        // Show/hide other buttons as needed
-                        PayButton.visibility = View.VISIBLE
-                        declineButton.visibility = View.VISIBLE
-                        spinnerToken.visibility = View.VISIBLE
+                        if (userCurrency.code == "USD") {
+                            // If user currency is USD, no conversion needed
+                            calculateFiatValue(priceInUSD)
+                        } else {
+                            // Only convert if the user's currency is not USD
+                            Utils.convertUSDToCurrency(priceInUSD, userCurrency.code) { convertedPrice ->
+                                if (convertedPrice != null) {
+                                    calculateFiatValue(convertedPrice)
+                                } else {
+                                    runOnUiThread {
+                                        findViewById<TextView>(R.id.paymentAmountTextView).text =
+                                            "Amount: $paymentAmount $tokenName (Fiat value unavailable)"
+                                        // Show UI elements as needed
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(this, "Failed to get token price", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             } else {
-                // Handle the case where the token is not found
                 runOnUiThread {
                     Toast.makeText(this, "Token not found", Toast.LENGTH_SHORT).show()
                 }

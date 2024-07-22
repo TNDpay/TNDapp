@@ -35,7 +35,6 @@ class HistoryActivity : AppCompatActivity() {
             PaymentHistoryItem("Bunzilla's Gourmet Burgers", 15.0, "2023-06-04", "FkYd9ZLgh6feCSWXHpzt7jJcFimKFbwiSAF2VYcj8HUQ", R.drawable.bonk),
             PaymentHistoryItem("Sakura Sushi Haven", 30.0, "2023-06-05", "8KSEQ2Yt9ogNBPNXLc1VQbm5jxQJq2YdqphvJh7tyzfA", R.drawable.token2_logo),
             PaymentHistoryItem("Taco Fiesta Mexican Grill", 12.5, "2023-06-06", "3Ai2vRvE2E3XmfSjZNbBz1rYYJcMnU8vnfGmD6RtYQtN", R.drawable.token1_logo),
-            PaymentHistoryItem("Masala Spice Indian Cuisine", 18.0, "2023-06-07", "J7p7FkL4CjPncCnWzFJ2PbHhU8JTZmGWFT1SRvMG6Qdx", R.drawable.tremp),
             PaymentHistoryItem("Noodle Ninja Asian Fusion", 22.0, "2023-06-08", "7CZpF3ywFTxPMXJByAn8tWQDpG2RsHJh4KinHdZaGz1e", R.drawable.bonk)
         )
     }

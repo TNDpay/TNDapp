@@ -5,12 +5,12 @@ object TokenData {
         TokenItem(1, "SOL", R.drawable.token1_logo, 9, "So11111111111111111111111111111111111111112"),
         TokenItem(2, "USDC", R.drawable.token2_logo, 6, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
         TokenItem(4, "USDT", R.drawable.usdt, 6, "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
-        TokenItem(6, "ORCA", R.drawable.orca, 6, "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"),
-        TokenItem(3, "Bonk", R.drawable.bonk, 5, "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
-        TokenItem(5, "HNT", R.drawable.hnt, 8, "hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux"),
+        TokenItem(6, "PYTH", R.drawable.pyth, 6, "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3"),
         TokenItem(5, "WIF", R.drawable.wif, 6, "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm"),
-        TokenItem(6, "TREMP", R.drawable.tremp, 6, "FU1q8vJpZNUrmqsciSjp8bAKKidGsLmouB8CBdf8TKQv"),
-        TokenItem(6, "BODEN", R.drawable.boden, 9, "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o"),
+        TokenItem(3, "Bonk", R.drawable.bonk, 5, "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
+        TokenItem(6, "RENDER", R.drawable.render, 8, "rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof"),
+        TokenItem(5, "HNT", R.drawable.hnt, 8, "hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux"),
+        TokenItem(6, "BOME", R.drawable.bome, 6, "ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"),
     )
 
     val tokenList_eth = listOf(
@@ -30,12 +30,12 @@ object TokenData {
         TokenItem(1, "SOL", R.drawable.token1_logo, 9, "So11111111111111111111111111111111111111112"),
         TokenItem(2, "USDC", R.drawable.token2_logo, 6, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
         TokenItem(4, "USDT", R.drawable.usdt, 6, "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
-        TokenItem(6, "ORCA", R.drawable.orca, 6, "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"),
-        TokenItem(3, "Bonk", R.drawable.bonk, 5, "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
-        TokenItem(5, "HNT", R.drawable.hnt, 8, "hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux"),
+        TokenItem(6, "PYTH", R.drawable.pyth, 6, "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3"),
         TokenItem(5, "WIF", R.drawable.wif, 6, "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm"),
-        TokenItem(6, "TREMP", R.drawable.tremp, 9, "FU1q8vJpZNUrmqsciSjp8bAKKidGsLmouB8CBdf8TKQv"),
-        TokenItem(6, "BODEN", R.drawable.boden, 9, "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o"),
+        TokenItem(3, "Bonk", R.drawable.bonk, 5, "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
+        TokenItem(6, "RENDER", R.drawable.render, 8, "rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof"),
+        TokenItem(5, "HNT", R.drawable.hnt, 8, "hntyVP6YFm1Hg25TN9WGLqM12b8TQmcknKrdu1oxWux"),
+        TokenItem(6, "BOME", R.drawable.bome, 6, "ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82"),
     )
 
     data class TokenItem(

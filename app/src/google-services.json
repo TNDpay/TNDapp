@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "718887359013",
+    "project_id": "tnd-pay",
+    "storage_bucket": "tnd-pay.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718887359013:android:2c5a60d7c3daadcbf6e5cc",
+        "android_client_info": {
+          "package_name": "com.tnd.tnd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ4yyyZf_zBCwtbXfzCNOmoxymFZ-gCXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
