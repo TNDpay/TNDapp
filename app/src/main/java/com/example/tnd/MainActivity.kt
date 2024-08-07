@@ -45,22 +45,6 @@
     import kotlin.math.pow
     import android.widget.Toast
     import android.app.AlertDialog
-    import android.icu.math.BigDecimal
-    import io.metamask.androidsdk.Ethereum
-    import io.metamask.androidsdk.Dapp
-    import io.metamask.androidsdk.RequestError
-    import io.metamask.androidsdk.*
-    import org.web3j.utils.Numeric
-    import java.math.BigInteger
-    import org.web3j.protocol.Web3j
-    import org.web3j.protocol.http.HttpService
-    import org.web3j.abi.datatypes.Function
-    import org.web3j.abi.FunctionEncoder
-    import org.web3j.abi.TypeReference
-    import org.web3j.abi.datatypes.Address
-    import org.web3j.abi.datatypes.generated.Uint256
-    import org.web3j.abi.datatypes.generated.Uint8
-    import org.web3j.protocol.core.DefaultBlockParameterName
     import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
     import com.solana.mobilewalletadapter.clientlib.Solana
     import androidx.cardview.widget.CardView
@@ -90,7 +74,6 @@
         private lateinit var addressTextView: TextView
         private lateinit var cardLayout: View
         private var connectedNetwork: String = ""
-        private lateinit var ethereum: Ethereum
         private lateinit var walletAdapter: MobileWalletAdapter
         private lateinit var connectionIdentity: ConnectionIdentity
         private lateinit var userCurrency: Currency
@@ -173,7 +156,6 @@
                                 when (connectedNetwork) {
                                     "Solana" -> {
                                         if (canTransact) {
-                                            Log.e("MainActivity", "Calling payment function rememebr we have ${this.authToken}")
                                             if (idSpinner == id) { // Checks if the selected token ID matches the tokenId
                                                 if (id == 1) {
                                                     Log.d("MainActivity", "SOL PAY ")
@@ -667,38 +649,6 @@
                     Log.e("MainActivity", "Error connecting to Solana Wallet: ${e.message}")
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MainActivity, "Error connecting to wallet", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-
-        private fun connectMetaMask() {
-            ethereum = Ethereum(context = this)
-
-            val dapp = Dapp("TND Pay", "https://www.tndpayments.com/")
-
-            // This is the same as calling eth_requestAccounts
-            ethereum.connect(dapp) { result ->
-                if (result is RequestError) {
-                    Log.e("MainActivity", "MetaMask connection error: ${result.message}")
-                    runOnUiThread {
-                        // Update the UI to show an error message
-                    }
-                } else {
-                    Log.d("MainActivity", "MetaMask connection result: $result")
-                    // Parse the result to get the user's Ethereum address
-                    val ethereumAddress = result.toString()
-
-
-                    connectedNetwork = "Polygon"
-                    UIUtils.updateCardUI(this, ethereumAddress, connectedNetwork)
-
-                    // Update the UI to reflect the connected state
-                    runOnUiThread {
-                        connectWalletButton.visibility = View.GONE
-                        updateButton()
-                        updateUserAddressUI(ethereumAddress)
-                        cardLayout.visibility = View.VISIBLE
                     }
                 }
             }

@@ -8,7 +8,6 @@ import androidx.browser.customtabs.CustomTabsIntent
 import com.google.firebase.firestore.FirebaseFirestore
 import okhttp3.*
 import com.google.gson.Gson
-import com.example.tnd.ExchangeRateCache
 class Utils {
     companion object {
         private val client = OkHttpClient()
@@ -59,41 +58,6 @@ class Utils {
                 return "${address.substring(0, 4)}....${address.substring(address.length - 4)}"
             }
             return address
-        }
-
-        private fun fetchExchangeRates(callback: (Boolean) -> Unit) {
-            Log.d("FetchExchangeRates", "Starting to fetch exchange rates from Firestore")
-            val db = FirebaseFirestore.getInstance()
-            val docRef = db.collection("c_rates").document("qAGRkjY9ZC7rlrMNNifO")
-
-            docRef.get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        Log.d("FetchExchangeRates", "Document data: ${document.data}")
-                        exchangeRates = document.data?.mapValues { (_, value) ->
-                            when (value) {
-                                is Double -> value
-                                is String -> value.toDoubleOrNull()
-                                else -> null
-                            }
-                        }?.filterValues { it != null } as? Map<String, Double>
-
-                        if (exchangeRates != null) {
-                            Log.d("FetchExchangeRates", "Exchange rates fetched successfully: $exchangeRates")
-                            callback(true)
-                        } else {
-                            Log.e("FetchExchangeRates", "Failed to parse exchange rates")
-                            callback(false)
-                        }
-                    } else {
-                        Log.e("FetchExchangeRates", "Document does not exist")
-                        callback(false)
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    Log.e("FetchExchangeRates", "Error getting document", exception)
-                    callback(false)
-                }
         }
 
         fun convertUSDToCurrency(usdAmount: Double, targetCurrencyCode: String, callback: (Double?) -> Unit) {
@@ -158,21 +122,6 @@ class Utils {
                     Log.e("FetchExchangeRate", "Error getting document", exception)
                     callback(null)
                 }
-        }
-
-        private fun performConversion(usdAmount: Double, targetCurrencyCode: String, callback: (Double?) -> Unit) {
-            Log.d("PerformConversion", "Performing conversion. USD Amount: $usdAmount, Target: $targetCurrencyCode")
-            Log.d("PerformConversion", "Exchange rates: $exchangeRates")
-
-            val rate = exchangeRates?.get(targetCurrencyCode)
-            if (rate != null) {
-                val result = usdAmount * rate
-                Log.d("PerformConversion", "Conversion successful. Rate: $rate, Result: $result")
-                callback(result)
-            } else {
-                Log.e("PerformConversion", "Rate not found for $targetCurrencyCode")
-                callback(null)
-            }
         }
     }
 }

@@ -40,6 +40,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "HELIUS_API_KEY", "\"${localProperties.getProperty("HELIUS_API_KEY", "")}\"")
+        //Only for Solana DappStore
+        //ndk {
+            //abiFilters.add("arm64-v8a")
+        //}
 
     }
 
@@ -116,15 +120,6 @@ dependencies {
     implementation("org.osmdroid:osmdroid-wms:6.1.14")
     implementation("org.osmdroid:osmdroid-mapsforge:6.1.14")
     implementation("org.osmdroid:osmdroid-geopackage:6.1.14")
-
-    //EVM (Metamask)
-    implementation("io.metamask.androidsdk:metamask-android-sdk:0.2.1")
-    implementation("org.web3j:core:4.8.7") {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
-    }
-    implementation("org.web3j:crypto:4.8.7"){
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
-    }
 
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))

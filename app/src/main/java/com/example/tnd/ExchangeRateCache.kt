@@ -15,8 +15,4 @@ object ExchangeRateCache {
 
     fun isCacheValid(): Boolean = System.currentTimeMillis() - lastUpdateTime < CACHE_DURATION
 
-    fun clearCache() {
-        cache.clear()
-        lastUpdateTime = 0
-    }
 }
