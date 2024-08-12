@@ -49,6 +49,9 @@
     import com.solana.mobilewalletadapter.clientlib.Solana
     import androidx.cardview.widget.CardView
     import com.example.tnd.SetPreferencesActivity.Preferences
+    import com.google.firebase.analytics.FirebaseAnalytics
+    import com.google.firebase.analytics.ktx.analytics
+    import com.google.firebase.ktx.Firebase
 
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
@@ -77,6 +80,7 @@
         private lateinit var walletAdapter: MobileWalletAdapter
         private lateinit var connectionIdentity: ConnectionIdentity
         private lateinit var userCurrency: Currency
+        private lateinit var firebaseAnalytics: FirebaseAnalytics
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,6 +103,7 @@
             spinnerToken.visibility = View.GONE
             addressTextView = findViewById(R.id.addressTextView)
             cardLayout = findViewById(R.id.cardLayout)
+            firebaseAnalytics = Firebase.analytics
 
 
             // Initialize ConnectionIdentity
@@ -578,6 +583,7 @@
 
                             val navigationView: NavigationView = findViewById(R.id.nav_view)
                             updateMenuItemsVisibility(navigationView)
+                            firebaseAnalytics.logEvent("wallet_connected", null)
                         }
                         is TransactionResult.NoWalletFound -> {
                             Log.e("MainActivity", "No wallet found")
@@ -777,7 +783,7 @@
                         val calculateFiatValue = { convertedPrice: Double ->
                             val fiatValue = convertedPrice * paymentAmount
                             runOnUiThread {
-                                findViewById<TextView>(R.id.paymentAddressTextView).text = "to: $paymentAddress"
+                                findViewById<TextView>(R.id.paymentAddressTextView).text = "To: $paymentAddress"
                                 findViewById<TextView>(R.id.paymentAmountTextView).text =
                                     "Amount: $paymentAmount $tokenName (${userCurrency.symbol}%.2f ${userCurrency.code})".format(fiatValue)
 

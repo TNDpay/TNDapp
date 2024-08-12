@@ -56,6 +56,7 @@ class InvoiceActivity : Activity() {
         userAddress = intent.getStringExtra("USER_ADDRESS")
         connectedNetwork = intent.getStringExtra("CONNECTED_NETWORK")
         editTextAmount.setText("0.00")
+        editTextFiatAmount.setText("0.00")
         myAddressButton.isEnabled = editTextAddress.text.isEmpty()
 
         myAddressButton.setOnClickListener {
