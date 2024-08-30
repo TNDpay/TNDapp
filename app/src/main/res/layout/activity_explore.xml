@@ -14,8 +14,7 @@
         android:padding="16dp"
         android:text="Find places to use Solana"
         android:textSize="24sp"
-        android:gravity="center"
-        android:background="@android:color/white"/>
+        android:gravity="center"/>
 
     <!-- OpenStreetMap View -->
     <org.osmdroid.views.MapView

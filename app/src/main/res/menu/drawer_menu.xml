@@ -40,4 +40,9 @@
         android:id="@+id/nav_explore_form"
         android:title="Privacy and User license"
         android:icon="@drawable/globe" />
+    <item
+        android:id="@+id/nav_version"
+        android:title="Version"
+        android:enabled="false"
+        android:orderInCategory="100"/>
 </menu>

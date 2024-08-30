@@ -1,30 +1,34 @@
 package com.example.tnd
 
-import android.os.Bundle
-import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.os.Build
+import android.os.Bundle
 import android.preference.PreferenceManager
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.tnd.databinding.ActivityExploreBinding
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class ExploreActivity : AppCompatActivity() {
 
@@ -52,11 +56,77 @@ class ExploreActivity : AppCompatActivity() {
         val mapController = map.controller
         mapController.setZoom(15.0)
 
-        checkLocationPermission()
+        checkGpsAndRequestPermission()
         fetchLocationsAndUpdateMap()
         setupAddStoreButton()
         setupMapClickListener()
         setupConfirmCancelButtons()
+    }
+
+    private fun checkGpsAndRequestPermission() {
+        if (!isGpsEnabled()) {
+            promptEnableGps()
+        } else {
+            checkLocationPermission()
+        }
+    }
+
+    private fun isGpsEnabled(): Boolean {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    }
+
+    private fun promptEnableGps() {
+        AlertDialog.Builder(this)
+            .setTitle("Enable GPS")
+            .setMessage("GPS is required for this app to work. Do you want to enable it?")
+            .setPositiveButton("Yes") { _, _ ->
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+                // Optionally, you can finish the activity or show a message that GPS is required
+            }
+            .create()
+            .show()
+    }
+
+    private fun checkLocationPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // We have fine location permission
+                enableMyLocation(true)
+            }
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // We have coarse location permission
+                enableMyLocation(false)
+            }
+            else -> {
+                // Request location permission
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ),
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                } else {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                }
+            }
+        }
     }
 
     private fun setupAddStoreButton() {
@@ -98,7 +168,6 @@ class ExploreActivity : AppCompatActivity() {
     private fun setupConfirmCancelButtons() {
         binding.btnConfirm.setOnClickListener {
             newStoreLocation?.let { location ->
-                // Launch new activity to add store details
                 val intent = Intent(this, AddStoreActivity::class.java).apply {
                     putExtra("latitude", location.latitude)
                     putExtra("longitude", location.longitude)
@@ -120,59 +189,82 @@ class ExploreActivity : AppCompatActivity() {
         map.overlays.removeAll { it is Marker && it.id == "tempMarker" }
         map.invalidate()
     }
-    private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
-        } else {
-            enableMyLocation()
-        }
-    }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    enableMyLocation()
-                } else {
-                    // Permission denied, handle accordingly (e.g., show a message to the user)
+                if (grantResults.isNotEmpty()) {
+                    when {
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED -> {
+                            // Check which permission was granted
+                            when (permissions[0]) {
+                                Manifest.permission.ACCESS_FINE_LOCATION -> {
+                                    // Fine location granted
+                                    enableMyLocation(true)
+                                }
+                                Manifest.permission.ACCESS_COARSE_LOCATION -> {
+                                    // Coarse location granted
+                                    enableMyLocation(false)
+                                }
+                            }
+                        }
+                        else -> {
+                            // Permission denied
+                            Toast.makeText(this, "Location permission is required for this feature", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
-                return
             }
         }
     }
 
-    private fun enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // Create and add the location overlay
-            val myLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map)
+    private fun enableMyLocation(preciseLocation: Boolean) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                if (preciseLocation) Manifest.permission.ACCESS_FINE_LOCATION else Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val locationProvider = GpsMyLocationProvider(this).apply {
+                // If we don't have precise location permission, we'll use a lower update frequency
+                // and higher distance between updates to approximate coarse location behavior
+                if (!preciseLocation) {
+                    locationUpdateMinTime = 10000 // Update every 10 seconds
+                    locationUpdateMinDistance = 100f // Update every 100 meters
+                }
+            }
+
+            val myLocationOverlay = MyLocationNewOverlay(locationProvider, map)
             myLocationOverlay.enableMyLocation()
             myLocationOverlay.enableFollowLocation()
             map.overlays.add(myLocationOverlay)
 
-            // Zoom to the user's location
-            val locationManager = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
-            val lastKnownLocation = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-
-            lastKnownLocation?.let {
-                val userLocation = GeoPoint(it.latitude, it.longitude)
-                map.controller.setCenter(userLocation)
-            } ?: run {
-                val defaultLocation = GeoPoint(40.359094404842565, 0.3996138427450273)
-                map.controller.setCenter(defaultLocation)
+            // Set up a location listener to update the map center when the user's location becomes available
+            val locationListener = object : android.location.LocationListener {
+                override fun onLocationChanged(location: android.location.Location) {
+                    val userLocation = GeoPoint(location.latitude, location.longitude)
+                    map.controller.animateTo(userLocation)
+                    (getSystemService(LOCATION_SERVICE) as LocationManager).removeUpdates(this)
+                }
+                override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+                override fun onProviderEnabled(provider: String) {}
+                override fun onProviderDisabled(provider: String) {}
             }
 
-            map.controller.setZoom(15.0)
+            // Request location updates
+            val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+            if (preciseLocation) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, locationListener)
+            } else {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000L, 100f, locationListener)
+            }
+
             map.invalidate() // Refresh the map
         } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+            // Handle the case where we don't have permission
+            Toast.makeText(this, "Location permission is required for this feature", Toast.LENGTH_LONG).show()
         }
     }
-
 
     data class LocationItem(
         val name: String,
@@ -216,6 +308,7 @@ class ExploreActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         map.onResume()
+        checkGpsAndRequestPermission()
     }
 
     override fun onPause() {

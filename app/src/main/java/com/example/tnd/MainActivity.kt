@@ -208,6 +208,10 @@
             }
             updateButton()
             val navigationView: NavigationView = findViewById(R.id.nav_view)
+            val menu = navigationView.menu
+            val versionItem = menu.findItem(R.id.nav_version)
+            val versionName = BuildConfig.VERSION_NAME
+            versionItem.title = "Version $versionName"
             navigationView.setNavigationItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.nav_connect_wallet -> {

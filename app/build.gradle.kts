@@ -22,7 +22,6 @@ android {
         buildConfig = true
         viewBinding = true
     }
-
     packagingOptions {
         resources {
             excludes.add("META-INF/INDEX.LIST")
@@ -34,16 +33,16 @@ android {
         applicationId = "com.tnd.tnd"
         minSdk = 28
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.3"
+        versionCode = 4
+        versionName = "1.4 Saga Phone"
         resConfigs("en")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "HELIUS_API_KEY", "\"${localProperties.getProperty("HELIUS_API_KEY", "")}\"")
         //Only for Solana DappStore
-        //ndk {
-            //abiFilters.add("arm64-v8a")
-        //}
+        ndk {
+            abiFilters.add("arm64-v8a")
+        }
 
     }
 
