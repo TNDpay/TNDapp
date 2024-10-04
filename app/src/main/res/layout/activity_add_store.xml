@@ -76,6 +76,38 @@
             android:layout_marginBottom="16dp"/>
 
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Referral Address"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:id="@+id/infoIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_info"
+                android:contentDescription="Information about referral address"/>
+
+        </LinearLayout>
+
+
+        <EditText
+            android:id="@+id/etReferral"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint=""
+            android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout
             android:id="@+id/operatingHoursHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

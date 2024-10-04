@@ -36,6 +36,7 @@ class ExploreActivity : AppCompatActivity() {
     private lateinit var map: MapView
     private var isAddingStore = false
     private var newStoreLocation: GeoPoint? = null
+    private var userAddress: String? = null
 
     companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -43,6 +44,7 @@ class ExploreActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        userAddress = intent.getStringExtra("USER_ADDRESS")
 
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
 
@@ -172,6 +174,7 @@ class ExploreActivity : AppCompatActivity() {
                     putExtra("latitude", location.latitude)
                     putExtra("longitude", location.longitude)
                 }
+                intent.putExtra("USER_ADDRESS", userAddress)
                 startActivity(intent)
             }
             resetAddStoreMode()

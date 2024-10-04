@@ -150,6 +150,7 @@
             val exploreBoutton: Button = findViewById(R.id.exploreButton)
             exploreBoutton.setOnClickListener {
                 val intent = Intent(this@MainActivity, ExploreActivity::class.java)
+                intent.putExtra("USER_ADDRESS", userAddress)
                 startActivity(intent)
             }
             PayButton.setOnClickListener {
