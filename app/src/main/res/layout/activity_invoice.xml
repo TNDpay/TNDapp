@@ -174,7 +174,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="SEND REQUEST"
+        android:text="CONTACTLESS REQUEST"
         android:textColor="@android:color/white"
         android:background="@drawable/card_background"
         app:layout_constraintStart_toStartOf="parent"

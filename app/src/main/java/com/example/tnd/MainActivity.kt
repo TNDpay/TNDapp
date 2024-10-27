@@ -45,6 +45,7 @@
     import kotlin.math.pow
     import android.widget.Toast
     import android.app.AlertDialog
+    import android.widget.ImageButton
     import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
     import com.solana.mobilewalletadapter.clientlib.Solana
     import androidx.cardview.widget.CardView
@@ -81,6 +82,7 @@
         private lateinit var connectionIdentity: ConnectionIdentity
         private lateinit var userCurrency: Currency
         private lateinit var firebaseAnalytics: FirebaseAnalytics
+        private lateinit var qrScannerButton: ImageButton
 
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,7 +105,10 @@
             spinnerToken.visibility = View.GONE
             addressTextView = findViewById(R.id.addressTextView)
             cardLayout = findViewById(R.id.cardLayout)
+            qrScannerButton = findViewById(R.id.qrScannerButton)
             firebaseAnalytics = Firebase.analytics
+
+
 
 
             // Initialize ConnectionIdentity
@@ -152,6 +157,12 @@
                 val intent = Intent(this@MainActivity, ExploreActivity::class.java)
                 intent.putExtra("USER_ADDRESS", userAddress)
                 startActivity(intent)
+            }
+            qrScannerButton.setOnClickListener {
+                startActivityForResult(
+                    Intent(this, QRScannerActivity::class.java),
+                    QR_SCANNER_REQUEST_CODE
+                )
             }
             PayButton.setOnClickListener {
                     paymentAddress?.let { address ->
@@ -210,9 +221,9 @@
             updateButton()
             val navigationView: NavigationView = findViewById(R.id.nav_view)
             val menu = navigationView.menu
-            val versionItem = menu.findItem(R.id.nav_version)
-            val versionName = BuildConfig.VERSION_NAME
-            versionItem.title = "Version $versionName"
+            //val versionItem = menu.findItem(R.id.nav_version)
+            //val versionName = BuildConfig.VERSION_NAME
+            //versionItem.title = "Version $versionName"
             navigationView.setNavigationItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.nav_connect_wallet -> {
@@ -495,7 +506,37 @@
                 }
             })
         }
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+            super.onActivityResult(requestCode, resultCode, data)
 
+            if (requestCode == QR_SCANNER_REQUEST_CODE && resultCode == RESULT_OK) {
+                // Retrieve the stored payment info from SharedPreferences
+                val sharedPrefs = getSharedPreferences("NFC_DATA", MODE_PRIVATE)
+                paymentAddress = sharedPrefs.getString("address", null)
+                paymentAmount = sharedPrefs.getString("amount", null)?.toDoubleOrNull()
+                tokenId = sharedPrefs.getString("id", null)?.toIntOrNull()
+
+                val tokenName = TokenData.tokenList_sol.find { it.id == tokenId }?.name
+
+                if (paymentAddress != null && paymentAmount != null && tokenName != null) {
+                    // Update UI with payment information
+                    updatePaymentInfo(paymentAddress!!, paymentAmount!!, tokenName)
+
+                    // Show payment controls
+                    PayButton.visibility = View.VISIBLE
+                    declineButton.visibility = View.VISIBLE
+                    spinnerToken.visibility = View.VISIBLE
+
+                    // Log the successful QR scan
+                    Log.d("MainActivity", "QR Payment Info - Address: $paymentAddress, Amount: $paymentAmount, Token: $tokenName")
+
+
+                } else {
+                    Log.e("MainActivity", "Invalid QR payment data received")
+                    Toast.makeText(this, "Invalid payment data received", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         private fun hasValidAuthToken(): Boolean {
             // Retrieve the saved auth token from SharedPreferences or similar storage
             val sharedPreferences = getSharedPreferences("wallet_prefs", Context.MODE_PRIVATE)
@@ -560,6 +601,7 @@
                     when (result) {
                         is TransactionResult.Success -> {
                             val authResult = result.authResult
+                            val debug = result
                             Log.e("MainActivity", "auth result IS THIS : $authResult")
 
                             userAddress = authResult.accounts.firstOrNull()?.publicKey?.let {
@@ -667,6 +709,7 @@
 
         companion object {
             private const val TAG = "MainActivity"
+            private const val QR_SCANNER_REQUEST_CODE = 100
         }
 
         private fun disconnectWallet() {

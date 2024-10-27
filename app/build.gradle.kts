@@ -27,6 +27,7 @@ android {
             excludes.add("META-INF/INDEX.LIST")
             excludes.add("META-INF/DEPENDENCIES")
             pickFirsts.add("META-INF/*")
+
         }
     }
     defaultConfig {
@@ -72,6 +73,8 @@ dependencies {
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
+    implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
     val hilt_version = "2.43.2"
     //implementation("io.metamask.androidsdk:metamask-android-sdk:0.1.2")
 
@@ -124,5 +127,15 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-analytics-ktx")
 
+    // CameraX dependencies | QR STUFF
+    val cameraxVersion = "1.3.0-alpha04"
+    implementation("androidx.camera:camera-core:${cameraxVersion}")
+    implementation("androidx.camera:camera-camera2:${cameraxVersion}")
+    implementation("androidx.camera:camera-lifecycle:${cameraxVersion}")
+    implementation("androidx.camera:camera-view:${cameraxVersion}")
+
+    // ZXing  | QR STUFF
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.4.1")
 
 }

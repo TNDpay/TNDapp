@@ -8,9 +8,13 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
-
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="false" />
@@ -27,9 +31,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TND"
-        tools:targetApi="34"
-        tools:replace="android:allowBackup">
-
+        tools:replace="android:allowBackup"
+        tools:targetApi="34" >
+        <activity
+            android:name=".QRScannerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TND" />
         <activity
             android:name=".ExploreActivity"
             android:exported="false"
@@ -51,17 +59,21 @@
             <meta-data
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
-                    android:scheme="monero"
-                    android:host="wallet" />
+                    android:host="wallet"
+                    android:scheme="monero" />
             </intent-filter>
         </activity>
-        <activity android:name=".SetPreferencesActivity"
-            android:exported="false"/>
+        <activity
+            android:name=".SetPreferencesActivity"
+            android:exported="false" />
         <activity
             android:name=".InvoiceActivity"
             android:exported="true" >
