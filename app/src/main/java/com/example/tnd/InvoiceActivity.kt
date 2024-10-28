@@ -21,6 +21,9 @@ import android.util.Log
 import com.example.tnd.SetPreferencesActivity.Preferences
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import com.journeyapps.barcodescanner.BarcodeEncoder
 
 class InvoiceActivity : Activity() {
 
@@ -39,6 +42,8 @@ class InvoiceActivity : Activity() {
     private var connectedNetwork: String? = null
     private var isUsingFiat = false
     private lateinit var switchCurrency: SwitchMaterial
+    private lateinit var qrCodeImageView: ImageView
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +57,7 @@ class InvoiceActivity : Activity() {
         myAddressButton = findViewById(R.id.buttonMyAddress)
         textViewTokenAmount = findViewById(R.id.textViewTokenAmount)
         switchCurrency = findViewById(R.id.switchCurrency)
+        qrCodeImageView = findViewById(R.id.qrCodeImageView)
 
         userAddress = intent.getStringExtra("USER_ADDRESS")
         connectedNetwork = intent.getStringExtra("CONNECTED_NETWORK")
@@ -117,6 +123,10 @@ class InvoiceActivity : Activity() {
         val buttonSend: Button = findViewById(R.id.buttonSend)
 
         buttonSend.setOnClickListener {
+            val selectedToken = spinnerToken.selectedItem as TokenData.TokenItem
+            val address = editTextAddress.text.toString()
+            val amount = editTextAmount.text.toString()
+            generateQRCode("$address,$amount,${selectedToken.id}")
             if (nfcAdapter?.isEnabled == true) {
                 prepareAndStoreNfcData()
                 Toast.makeText(this, "Ready to send via NFC. Tap devices together.", Toast.LENGTH_LONG).show()
@@ -167,6 +177,28 @@ class InvoiceActivity : Activity() {
         }
 
     }
+
+    private fun generateQRCode(content: String) {
+        try {
+            val multiFormatWriter = MultiFormatWriter()
+            val bitMatrix = multiFormatWriter.encode(
+                content,
+                BarcodeFormat.QR_CODE,
+                500,
+                500
+            )
+            val barcodeEncoder = BarcodeEncoder()
+            val bitmap = barcodeEncoder.createBitmap(bitMatrix)
+
+            qrCodeImageView.setImageBitmap(bitmap)
+            qrCodeImageView.visibility = View.VISIBLE
+
+        } catch (e: Exception) {
+            Log.e("QRCode", "Error generating QR code", e)
+            Toast.makeText(this, "Error generating QR code", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setupCurrencySwitch() {
         switchCurrency.setOnCheckedChangeListener { _, isChecked ->
             isUsingFiat = isChecked

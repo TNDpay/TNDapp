@@ -53,6 +53,7 @@
     import com.google.firebase.analytics.FirebaseAnalytics
     import com.google.firebase.analytics.ktx.analytics
     import com.google.firebase.ktx.Firebase
+    import com.solana.mobilewalletadapter.clientlib.TransactionParams
 
     class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private lateinit var textView: TextView
@@ -338,28 +339,34 @@
         fun Context.toast(message: String) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
-        private fun sendSwap(swapTransaction: String) {
+        private fun sendSwap(swapTransaction: String, contextSlot: Long) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     try {
-                        // Decode the base64 encoded transaction "
+                        // Decode the base64 encoded transaction
                         val transactionBytes = Base64.decode(swapTransaction, Base64.DEFAULT)
-                        // Start the signing process
                         Log.d("sendSwap", "Swap Transaction Response: $transactionBytes")
                         walletAdapter.blockchain = Solana.Mainnet
-                        val result = walletAdapter.transact(activityResultSender) {
 
-                            // Ensure we're authorized first
-                            //reauthorize(identityUri, iconUri, identityName, authToken)
-                            // Then sign and send the transaction
-                            signAndSendTransactions(arrayOf(transactionBytes))
+                        val result = walletAdapter.transact(activityResultSender) {
+                            val params = com.solana.mobilewalletadapter.clientlib.TransactionParams(
+                                minContextSlot = contextSlot.toInt(),
+                                commitment = "confirmed",
+                                maxRetries = 3,
+                                skipPreflight = false,
+                                waitForCommitmentToSendNextTransaction = true
+                            )
+
+                            signAndSendTransactions(
+                                transactions = arrayOf(transactionBytes),
+                                params = params
+                            )
                         }
+
                         when (result) {
                             is TransactionResult.Success -> {
-                                // Transaction was successful, process the signatures
                                 val signatures = result.payload.signatures
                                 if (signatures.isNotEmpty()) {
-                                    // Log or handle each signature
                                     signatures.forEach { signature ->
                                         val readableSignature = Base58.encode(signature)
                                         Log.d("MainActivity", "Swap transaction successful. Signature: $readableSignature")
@@ -383,19 +390,15 @@
                                 }
                             }
                             is TransactionResult.Failure -> {
-                                // Transaction failed
                                 Log.e("MainActivity", "Swap transaction failed: ${result}")
                             }
                             is TransactionResult.NoWalletFound -> {
-                                // No wallet application found
                                 Log.e("MainActivity", "No wallet application found.")
                             }
                             else -> {
-                                // Handle any other unexpected results
                                 Log.e("MainActivity", "An unknown error occurred during transaction.")
                             }
                         }
-
                     } catch (e: Exception) {
                         Log.e("MainActivity", "Exception in sendSwapTransaction: ${e.message}")
                     }
@@ -479,8 +482,10 @@
                                         // Extract the serialized transaction string
                                         val serializedTransaction = swapTransactionResponse?.swapTransaction
                                         if (serializedTransaction != null) {
-                                            // Call sendSwap with the serialized transaction
-                                            sendSwap(serializedTransaction)
+                                            // Get contextSlot from the swapQuote
+                                            val contextSlot = swapQuote.contextSlot
+                                            // Call sendSwap with the serialized transaction and contextSlot
+                                            sendSwap(serializedTransaction, contextSlot)
                                         } else {
                                             Log.e("SwapFunction", "Serialized transaction is null")
                                         }
@@ -506,6 +511,8 @@
                 }
             })
         }
+
+
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             super.onActivityResult(requestCode, resultCode, data)
 
@@ -916,123 +923,149 @@
         private fun buildSendSPLTransaction(
             recipientAddress: String,
             amount: Double,
-            senderAccount:  String,
+            senderAccount: String,
             id: Int
         ) {
             scope.launch {
                 withContext(Dispatchers.IO) {
-                    val token = TokenData.tokenList_sol.find { it.id == id }
-                    if (token == null) {
-                        Log.e("MainActivity", "Token with ID $id not found.")
-                        return@withContext // Exit the function if token is not found
-                    }
-                    val mintAddress = token.mintAddress
-                    val splMintAddress = PublicKey(mintAddress)
-                    val splDecimals = token.decimals
-                    val amountInSmallestUnit = (amount * 10.0.pow(splDecimals)).toLong()
+                    try {
+                        val token = TokenData.tokenList_sol.find { it.id == id }
+                        if (token == null) {
+                            Log.e("MainActivity", "Token with ID $id not found.")
+                            return@withContext
+                        }
+                        val mintAddress = token.mintAddress
+                        val splMintAddress = PublicKey(mintAddress)
+                        val splDecimals = token.decimals
+                        val amountInSmallestUnit = (amount * 10.0.pow(splDecimals)).toLong()
 
-                    val fromPublicKey = PublicKey(senderAccount)
-                    val toPublicKey = PublicKey(recipientAddress)
+                        val fromPublicKey = PublicKey(senderAccount)
+                        val toPublicKey = PublicKey(recipientAddress)
 
-                    val rpcService = RpcService()
-                    val blockhashResult = rpcService.getLatestBlockhash()
-                    val blockhash: String = blockhashResult?.result?.value?.blockhash ?: throw IllegalStateException("Blockhash could not be retrieved")
+                        val rpcService = RpcService()
+                        val blockhashResult = rpcService.getLatestBlockhash()
+                        val blockhash: String = blockhashResult?.result?.value?.blockhash
+                            ?: throw IllegalStateException("Blockhash could not be retrieved")
 
-                    // Calculate the associated token account address
-                    val associatedTokenAddress = SolanaUtils.findAssociatedTokenAddress(toPublicKey, splMintAddress)
-                    val lol=associatedTokenAddress
-                    Log.d("MainActivity", "The associated tokenaddress is $lol")
-                    // Check if the associated token account exists
-                    val token_init = rpcService.getTokenAccountsByOwner(toPublicKey.toString(),mintAddress)
+                        val currentSlot = rpcService.getCurrentSlot()
+                            ?: throw IllegalStateException("Could not retrieve current slot")
 
-                    Log.d("MainActivity", "Associated Token Account Info: $token_init")
+                        // Calculate the associated token account address
+                        val associatedTokenAddress = SolanaUtils.findAssociatedTokenAddress(toPublicKey, splMintAddress)
+                        Log.d("MainActivity", "The associated tokenaddress is $associatedTokenAddress")
 
-                    val transaction = Transaction()
-                    transaction.feePayer = fromPublicKey
-                    transaction.recentBlockhash = blockhash
-                    // Create the associated token account if it doesn't exist
-                    if (!token_init) {
-                        val createATokenInstruction = AssociatedTokenProgram.createAssociatedTokenAccountInstruction(
-                            mint = splMintAddress,
-                            associatedAccount = associatedTokenAddress,
-                            owner = toPublicKey,
-                            payer = fromPublicKey
+                        // Check if the associated token account exists
+                        val token_init = rpcService.getTokenAccountsByOwner(toPublicKey.toString(), mintAddress)
+                        Log.d("MainActivity", "Associated Token Account Info: $token_init")
+
+                        val transaction = Transaction()
+                        transaction.feePayer = fromPublicKey
+                        transaction.recentBlockhash = blockhash
+
+                        // Create the associated token account if it doesn't exist
+                        if (!token_init) {
+                            val createATokenInstruction = AssociatedTokenProgram.createAssociatedTokenAccountInstruction(
+                                mint = splMintAddress,
+                                associatedAccount = associatedTokenAddress,
+                                owner = toPublicKey,
+                                payer = fromPublicKey
+                            )
+                            transaction.add(createATokenInstruction)
+                        }
+
+                        // Add the SPL Token transfer instruction
+                        transaction.add(
+                            TokenProgram.transfer(
+                                source = SolanaUtils.findAssociatedTokenAddress(fromPublicKey, splMintAddress),
+                                destination = associatedTokenAddress,
+                                owner = fromPublicKey,
+                                amount = amountInSmallestUnit
+                            )
                         )
-                        transaction.add(createATokenInstruction)
-                    }
 
-                    // Add the SPL Token transfer instruction
-                    transaction.add(
-                        TokenProgram.transfer(
-                            source = SolanaUtils.findAssociatedTokenAddress(fromPublicKey, splMintAddress),
-                            destination = associatedTokenAddress,
-                            owner = fromPublicKey,
-                            amount = amountInSmallestUnit
-                        )
-                    )
-                    val bytes = transaction.serialize(SerializeConfig(requireAllSignatures = false))
-                    walletAdapter.blockchain = Solana.Mainnet
+                        val bytes = transaction.serialize(SerializeConfig(requireAllSignatures = false))
+                        walletAdapter.blockchain = Solana.Mainnet
 
-                    val result = walletAdapter.transact(activityResultSender) {
-                        // Ensure we're authorized first
-                        //reauthorize(identityUri, iconUri, identityName, authToken)
-                        signAndSendTransactions(arrayOf(bytes))
-                    }
+                        val result = walletAdapter.transact(activityResultSender) {
+                            val params = com.solana.mobilewalletadapter.clientlib.TransactionParams(
+                                minContextSlot = currentSlot.toInt(),
+                                commitment = "confirmed",
+                                maxRetries = 3,
+                                skipPreflight = false,
+                                waitForCommitmentToSendNextTransaction = true
+                            )
 
-                    // Check and handle the transaction result
-                    withContext(Dispatchers.Main) {
-                        when (result) {
-                            is TransactionResult.Success -> {
-                                val signatures = result.payload.signatures
-                                Log.d("MainActivity",signatures.toString())
-                                if (signatures.isNotEmpty()) {
-                                    // Log or handle each signature
-                                    signatures.forEach { signature ->
-                                        val readableSignature = Base58.encode(signature)
-                                        Log.d("MainActivity", "Transaction successful. Signature: $readableSignature")
-                                        runOnUiThread {
-                                            AlertDialog.Builder(this@MainActivity)
-                                                .setTitle("Transaction Successful")
-                                                .setMessage("Do you want to view the transaction on Solana Explorer?")
-                                                .setPositiveButton("Yes") { dialog, id ->
-                                                    Utils.openWebPage(this@MainActivity,"https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
-                                                }
-                                                .setNegativeButton("No") { dialog, id ->
-                                                    dialog.dismiss()
-                                                }
-                                                .create()
-                                                .show()
+                            signAndSendTransactions(
+                                transactions = arrayOf(bytes),
+                                params = params
+                            )
+                        }
+
+                        // Check and handle the transaction result
+                        withContext(Dispatchers.Main) {
+                            when (result) {
+                                is TransactionResult.Success -> {
+                                    val signatures = result.payload.signatures
+                                    Log.d("MainActivity", signatures.toString())
+                                    if (signatures.isNotEmpty()) {
+                                        signatures.forEach { signature ->
+                                            val readableSignature = Base58.encode(signature)
+                                            Log.d("MainActivity", "Transaction successful. Signature: $readableSignature")
+                                            runOnUiThread {
+                                                AlertDialog.Builder(this@MainActivity)
+                                                    .setTitle("Transaction Successful")
+                                                    .setMessage("Do you want to view the transaction on Solana Explorer?")
+                                                    .setPositiveButton("Yes") { dialog, id ->
+                                                        Utils.openWebPage(this@MainActivity, "https://solana.fm/tx/$readableSignature?cluster=mainnet-alpha")
+                                                    }
+                                                    .setNegativeButton("No") { dialog, id ->
+                                                        dialog.dismiss()
+                                                    }
+                                                    .create()
+                                                    .show()
+                                            }
+                                            decline()
                                         }
-                                        decline()
+                                    } else {
+                                        Log.e("MainActivity", "Transaction successful but no signatures received.")
+                                        toast("Transaction successful but no signatures received.")
                                     }
-                                } else {
-                                    Log.e("MainActivity", "Transaction successful but no signatures received.")
-                                    toast("Transaction successful but no signatures received.")
+                                }
+                                is TransactionResult.Failure -> {
+                                    Log.e("MainActivity", "Transaction failed: ${result}")
+                                    toast("Transaction failed")
+                                }
+                                is TransactionResult.NoWalletFound -> {
+                                    Log.e("MainActivity", "No wallet application found.")
+                                    toast("No wallet application found.")
+                                }
+                                else -> {
+                                    Log.e("MainActivity", "An unknown error occurred.")
                                 }
                             }
-                            is TransactionResult.Failure -> {
-                                Log.e("MainActivity", "Transaction failed: ${result}")
-                                toast("Transaction failed")
-                            }
-                            is TransactionResult.NoWalletFound -> {
-                                Log.e("MainActivity", "No wallet application found.")
-                                toast("No wallet application found.")
-                            }
-                            else -> {
-                                Log.e("MainActivity", "An unknown error occurred.")
-                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error in buildSendSPLTransaction: ${e.message}")
+                        Log.e("MainActivity", "Stack trace: ${e.stackTrace.joinToString("\n")}")
+                        withContext(Dispatchers.Main) {
+                            toast("ERROR: ${e.message}")
                         }
                     }
                 }
-                }
+            }
         }
+
         private fun sendSol(recipientAddress: String, amount: Double, senderAccount: String) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     try {
                         val rpcService = RpcService()
                         val blockhashResult = rpcService.getLatestBlockhash()
-                        val blockhash: String = blockhashResult?.result?.value?.blockhash ?: throw IllegalStateException("Blockhash could not be retrieved")
+                        val blockhash: String = blockhashResult?.result?.value?.blockhash
+                            ?: throw IllegalStateException("Blockhash could not be retrieved")
+
+                        val currentSlot = rpcService.getCurrentSlot()
+                            ?: throw IllegalStateException("Could not retrieve current slot")
 
                         // Create a transfer transaction
                         val transaction = Transaction()
@@ -1044,26 +1077,40 @@
                             )
                         )
                         transaction.recentBlockhash = blockhash
-                        transaction.feePayer =PublicKey(senderAccount)
+                        transaction.feePayer = PublicKey(senderAccount)
                         walletAdapter.blockchain = Solana.Mainnet
+
                         // Sign and send the transaction using the wallet adapter
                         val result = walletAdapter.transact(activityResultSender) {
-                            // Ensure we're authorized first
-                            //reauthorize(identityUri, iconUri, identityName, authToken)
-                            val sig =  signAndSendTransactions(arrayOf(transaction.serialize(SerializeConfig(requireAllSignatures = false)))).signatures.firstOrNull()
-                            val txid=Base58.encode(sig)
-                            Log.e("MainActivity",txid)
+                            val serializedTx = transaction.serialize(SerializeConfig(
+                                requireAllSignatures = false,
+                                verifySignatures = false
+                            ))
+
+                            val params = com.solana.mobilewalletadapter.clientlib.TransactionParams(
+                                minContextSlot = currentSlot.toInt(),
+                                commitment = "confirmed",      // or "finalized" based on your needs
+                                maxRetries = 3,               // reasonable default for retries
+                                skipPreflight = false,        // typically want preflight checks
+                                waitForCommitmentToSendNextTransaction = true  // wait for confirmation before next tx
+                            )
+
+                            val sig = signAndSendTransactions(
+                                transactions = arrayOf(serializedTx),
+                                params = params
+                            ).signatures.firstOrNull()
+
+                            val txid = Base58.encode(sig)
+                            Log.e("MainActivity", "Transaction ID: $txid")
                             runOnUiThread {
                                 AlertDialog.Builder(this@MainActivity)
                                     .setTitle("Transaction Successful")
                                     .setMessage("Do you want to view the transaction on Solana Explorer?")
-                                    .setPositiveButton("Yes") { dialog, id ->
-                                        // User clicked Yes button
+                                    .setPositiveButton("Yes") { dialog, _ ->
                                         val url = "https://solana.fm/tx/$txid?cluster=mainnet-alpha"
                                         Utils.openWebPage(this@MainActivity,url)
                                     }
-                                    .setNegativeButton("No") { dialog, id ->
-                                        // User clicked No button or dismissed the dialog
+                                    .setNegativeButton("No") { dialog, _ ->
                                         dialog.dismiss()
                                     }
                                     .create()
@@ -1073,6 +1120,7 @@
                         }
                     } catch (e: Exception) {
                         Log.e("MainActivity", "Error sending SOL: ${e.message}")
+                        Log.e("MainActivity", "Stack trace: ${e.stackTrace.joinToString("\n")}")
                         toast("ERROR")
                     }
                 }
