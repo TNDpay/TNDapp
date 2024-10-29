@@ -6,6 +6,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+
 class UIUtils {
     companion object {
         fun updateBackgroundBasedOnNFCState(backgroundImageView: ImageView) {
@@ -26,12 +27,21 @@ class UIUtils {
             val chainLogoImageView = cardLayout.findViewById<ImageView>(R.id.chainLogoImageView)
             val metamaskImageView = cardLayout.findViewById<ImageView>(R.id.metamaskImageView)
             val addressCard = cardLayout.findViewById<TextView>(R.id.addressTextView)
+            val emv_chip = cardLayout.findViewById<ImageView>(R.id.EMV_CHIP)
 
             when (connectedNetwork) {
                 "Solana" -> {
                     cardBackground.setBackgroundResource(R.drawable.card_background)
                     chainLogoImageView.setImageResource(R.drawable.token1_logo)
                     metamaskImageView.visibility = View.GONE
+                    addressCard.text = Utils.shortenAddress(address)
+                    emv_chip.setImageResource(R.drawable.emv_chip)
+                }
+                "" -> {
+                    cardBackground.setBackgroundResource(R.drawable.card_disconnected)
+                    chainLogoImageView.setImageResource(R.drawable.disconnect)
+                    metamaskImageView.visibility = View.GONE
+                    emv_chip.setImageResource(R.drawable.emv_chip_disconnected)
                     addressCard.text = Utils.shortenAddress(address)
                 }
                 "Polygon" -> {

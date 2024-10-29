@@ -23,6 +23,7 @@
             android:layout_marginBottom="52dp">
 
             <ImageView
+                android:id="@+id/EMV_CHIP"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:src="@drawable/emv_chip"

@@ -34,8 +34,8 @@ android {
         applicationId = "com.tnd.tnd"
         minSdk = 28
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.4 Saga Phone"
+        versionCode = 12
+        versionName = "1.6"
         resConfigs("en")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

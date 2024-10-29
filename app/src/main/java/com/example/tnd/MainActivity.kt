@@ -121,7 +121,9 @@
                 cardLayout.visibility = View.VISIBLE
             } else {
                 connectWalletButton.visibility = View.VISIBLE
-                cardLayout.visibility = View.GONE
+                //cardLayout.visibility = View.GONE
+                connectedNetwork=""
+                UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
             }
             val (retrievedAuthToken, retrievedUserAddress,retrievedNetwork) = retrieveAuthData()
             if (retrievedAuthToken != null && retrievedUserAddress != null) {
@@ -586,18 +588,7 @@
         private fun connectWallet() {
             // Create an AlertDialog to prompt the user to choose the wallet type
             connectSolanaWallet2()
-            //TODO: Use walletconnect instead of MetaMask api
-
-            //val walletOptions = arrayOf("Solana Wallet", "MetaMask (ONLY POLYGON)")
-            //AlertDialog.Builder(this)
-            //    .setTitle("Select Wallet Type")
-            //    .setItems(walletOptions) { _, which ->
-            //        when (which) {
-            //            0 -> connectSolanaWallet()
-            //            1 -> showMetaMaskWarningDialog()
-            //        }
-            //    }
-            //    .show()
+            //TODO: OTHER CHAINS
         }
         private fun connectSolanaWallet2() {
             scope.launch {
@@ -660,59 +651,6 @@
                 }
             }
         }
-        private fun connectSolanaWallet() {
-            scope.launch {
-                try {
-                    chain="solana:mainnet"
-                    walletAdapter.blockchain = Solana.Mainnet
-                    val result = walletAdapter.transact(activityResultSender) {
-                        authorize(identityUri, iconUri, identityName, chain )
-                    }
-                    Log.e("Mainactivity","result is ${result}")
-                    when (result) {
-                        is TransactionResult.Success -> {
-                            val authResult = result.payload
-                            userAddress = authResult.accounts.firstOrNull()?.publicKey?.let {
-                                Base58.encode(it)
-                            } ?: run {
-                                Log.e("MainActivity", "No account returned from wallet")
-                                return@launch
-                            }
-                            authToken = authResult.authToken
-                            canTransact = true
-
-                            Log.d("MainActivity", "Connected to Solana Wallet: $userAddress")
-                            connectedNetwork = "Solana"
-
-                            storeAuthData(authToken, userAddress, connectedNetwork)
-
-                            withContext(Dispatchers.Main) {
-                                UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
-                                connectWalletButton.visibility = View.GONE
-                                updateButton()
-                                updateUserAddressUI(userAddress)
-                                cardLayout.visibility = View.VISIBLE
-                                updateTokenList(this@MainActivity, connectedNetwork)
-                            }
-
-                            val navigationView: NavigationView = findViewById(R.id.nav_view)
-                            updateMenuItemsVisibility(navigationView)
-                        }
-                        is TransactionResult.NoWalletFound -> {
-                            // Handle no wallet found case
-                        }
-                        is TransactionResult.Failure -> {
-                            // Handle failure case
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("MainActivity", "Error connecting to Solana Wallet: ${e.message}")
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "Error connecting to wallet", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
 
         companion object {
             private const val TAG = "MainActivity"
@@ -750,7 +688,9 @@
                                 findViewById<CardView>(R.id.paymentInfoCard).visibility = View.GONE
                                 findViewById<TextView>(R.id.userAddressTextView).text = ""
                                 connectWalletButton.visibility = View.VISIBLE
-                                cardLayout.visibility = View.GONE
+                                //cardLayout.visibility = View.GONE
+                                connectedNetwork=""
+                                UIUtils.updateCardUI(this@MainActivity, userAddress, connectedNetwork)
 
                                 updateButton()
                                 val navigationView: NavigationView = findViewById(R.id.nav_view)

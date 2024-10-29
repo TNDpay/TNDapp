@@ -42,7 +42,7 @@
         android:icon="@drawable/globe" />
     <item
         android:id="@+id/nav_version"
-        android:title="Version 1.5 Saga Phone"
+        android:title="Version 1.6"
         android:enabled="false"
         android:orderInCategory="100"/>
 </menu>
