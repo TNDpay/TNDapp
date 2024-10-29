@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/nav_header"
+        android:title="TND PAY"
+        android:enabled="false" />
+
+    <item
+        android:id="@+id/nav_header_divider"
+        android:title=""
+        android:enabled="false"/>
+
+    <item
         android:id="@+id/nav_connect_wallet"
         android:title="Connect Wallet"
         android:icon="@drawable/connected" />
@@ -20,8 +30,7 @@
     <item
         android:id="@+id/nav_twitter"
         android:title="Twitter"
-        android:icon="@drawable/xmini"
-        />
+        android:icon="@drawable/xmini" />
     <item
         android:id="@+id/nav_telegram"
         android:title="Telegram"

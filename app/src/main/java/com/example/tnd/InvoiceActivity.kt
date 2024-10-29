@@ -65,25 +65,7 @@ class InvoiceActivity : Activity() {
         editTextFiatAmount.setText("0.00")
         myAddressButton.isEnabled = editTextAddress.text.isEmpty()
 
-        myAddressButton.setOnClickListener {
-            editTextAddress.setText(userAddress)
-            myAddressButton.isEnabled = false
-        }
-
-        // Load user's preferred currency
-        val currencyCode = SetPreferencesActivity.Preferences.getDefaultBaseCurrency(this)
-        userCurrency = currencies.find { it.code == currencyCode } ?: currencies.first()
-        // Update the hint text of the Fiat Amount input field
-        val fiatAmountInputLayout = findViewById<TextInputLayout>(R.id.fiatAmountInputLayout)
-        fiatAmountInputLayout.hint = "Fiat Amount (${userCurrency.symbol})"
-
-        setupAmountWatcher()
-        setupFiatAmountWatcher()
-        setupAddressTextWatcher()
-        setupCurrencySwitch()
-
-
-        // Set up the token spinner
+        // Set up the token spinner first
         val tokenAdapter = when (connectedNetwork) {
             "Solana" -> TokenAdapter(this, TokenData.tokenList_sol)
             "XMR" -> TokenAdapter(this, TokenData.tokenList_xmr)
@@ -95,7 +77,25 @@ class InvoiceActivity : Activity() {
         defaultInvoiceToken?.let {
             spinnerToken.setSelection(tokenAdapter.getPosition(it))
         }
-        updateFiatAmount()
+
+        // Now that the spinner is set up, we can safely update the input fields state
+        updateInputFieldsState(isUsingFiat)
+
+        // Load user's preferred currency
+        val currencyCode = SetPreferencesActivity.Preferences.getDefaultBaseCurrency(this)
+        userCurrency = currencies.find { it.code == currencyCode } ?: currencies.first()
+
+        // Update the hint text of the Fiat Amount input field
+        val fiatAmountInputLayout = findViewById<TextInputLayout>(R.id.fiatAmountInputLayout)
+        fiatAmountInputLayout.hint = "Fiat Amount (${userCurrency.symbol})"
+
+        setupAmountWatcher()
+        setupFiatAmountWatcher()
+        setupAddressTextWatcher()
+        setupCurrencySwitch()
+
+
+        //updateFiatAmount()
 
         spinnerToken.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
