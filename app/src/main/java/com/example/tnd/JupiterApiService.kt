@@ -8,7 +8,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface JupiterApiService {
-    @GET("v6/price")
+    @GET("price/v2")
     fun getPrice(@Query("ids") tokenName: String): Call<PriceResponse>
 
     @GET("v6/quote")

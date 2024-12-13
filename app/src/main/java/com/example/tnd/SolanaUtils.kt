@@ -43,7 +43,7 @@ class SolanaUtils {
             }
 
             val retrofit = Retrofit.Builder()
-                .baseUrl("https://price.jup.ag/")
+                .baseUrl("https://api.jup.ag/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
             val service = retrofit.create(JupiterApiService::class.java)
